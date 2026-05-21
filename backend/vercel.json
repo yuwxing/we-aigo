@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/video-search",
+      "destination": "/api/video-search.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ],
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60
+    },
+    "api/video-search.js": {
+      "maxDuration": 30
+    }
+  }
+}

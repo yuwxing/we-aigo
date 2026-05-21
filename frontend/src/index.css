@@ -1,0 +1,419 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ===== 全局梦幻渐变背景 ===== */
+.anime-gradient-bg {
+  background: linear-gradient(135deg, 
+    rgba(168, 130, 255, 0.08) 0%, 
+    rgba(236, 130, 255, 0.05) 25%, 
+    rgba(255, 130, 180, 0.08) 50%, 
+    rgba(255, 130, 200, 0.05) 75%, 
+    rgba(168, 130, 255, 0.08) 100%
+  );
+}
+
+.page-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(180deg, 
+    #faf5ff 0%, 
+    #f5f3ff 30%, 
+    #fdf2f8 60%, 
+    #faf5ff 100%
+  );
+  position: relative;
+}
+
+.page-wrapper::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse 80% 50% at 10% 20%, rgba(168, 130, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(236, 130, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255, 182, 193, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== 毛玻璃卡片效果 ===== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 4px 24px rgba(168, 85, 247, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.glass-card-dark {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ===== 渐变文字效果 ===== */
+.gradient-text-purple-pink {
+  background: linear-gradient(135deg, #a855f7 0%, #d946ef 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== 发光动画 ===== */
+@keyframes glow-pulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-8px); 
+  }
+}
+
+@keyframes shimmer {
+  0% { 
+    background-position: -200% center;
+  }
+  100% { 
+    background-position: 200% center;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% { 
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+.animate-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ===== 光效装饰 ===== */
+.light-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.light-orb-purple {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
+}
+
+.light-orb-pink {
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.35) 0%, transparent 70%);
+}
+
+.light-orb-blue {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+}
+
+.light-orb-gold {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, transparent 70%);
+}
+
+/* ===== 角色专属渐变色 ===== */
+/* 花仙子 - 温柔治愈系 */
+.agent-color-huaxianzi {
+  --agent-primary: #c084fc;
+  --agent-secondary: #f472b6;
+  --agent-gradient: linear-gradient(135deg, #e9d5ff 0%, #fbcfe8 50%, #fce7f3 100%);
+}
+
+/* 萌芽 - 创意设计精灵 */
+.agent-color-mengya {
+  --agent-primary: #a78bfa;
+  --agent-secondary: #c4b5fd;
+  --agent-gradient: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #e9d5ff 100%);
+}
+
+/* 莲华 - 赛博朋克AI */
+.agent-color-lianhua {
+  --agent-primary: #8b5cf6;
+  --agent-secondary: #6366f1;
+  --agent-gradient: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 50%, #ddd6fe 100%);
+}
+
+/* 暖语 - 情感陪伴 */
+.agent-color-nuanyu {
+  --agent-primary: #f472b6;
+  --agent-secondary: #fb7185;
+  --agent-gradient: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 50%, #fda4af 100%);
+}
+
+/* 画师墨彩 - AI绘画专家 */
+.agent-color-mocai {
+  --agent-primary: #a855f7;
+  --agent-secondary: #eab308;
+  --agent-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+}
+
+/* ===== 角色色条 ===== */
+.agent-stripe {
+  position: relative;
+}
+
+.agent-stripe::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--stripe-color-start, #a855f7) 0%, var(--stripe-color-end, #ec4899) 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+/* ===== 金色发光星标 ===== */
+.star-glow {
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.6));
+  color: #fbbf24;
+}
+
+/* ===== 药丸形能力标签 ===== */
+.capability-pill {
+  background: linear-gradient(135deg, var(--pill-color-start, #e9d5ff) 0%, var(--pill-color-end, #fbcfe8) 100%);
+  color: var(--pill-text, #7c3aed);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+/* ===== 性格标签 ===== */
+.personality-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.personality-healing {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  color: #db2777;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
+
+.personality-creative {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #7c3aed;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.personality-cool {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.personality-warm {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #ea580c;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.personality-artistic {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+/* ===== 选中状态渐变 ===== */
+.tab-selected {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+  color: #a855f7;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(90deg, #a855f7, #ec4899) 1;
+}
+
+/* ===== 底部导航选中 ===== */
+.bottom-nav-selected {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+  color: #a855f7;
+}
+
+/* ===== 菜单项hover发光 ===== */
+.nav-item-glow:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+}
+
+/* ===== 卡片hover效果增强 ===== */
+.card-hover-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-enhanced:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 20px 40px rgba(168, 85, 247, 0.12),
+    0 0 0 1px rgba(168, 85, 247, 0.1);
+}
+
+/* ===== 按钮渐变增强 ===== */
+.btn-gradient-primary {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-gradient-primary:hover {
+  background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ===== 柔光效果 ===== */
+.soft-glow {
+  box-shadow: 
+    0 0 20px rgba(168, 85, 247, 0.1),
+    0 0 40px rgba(236, 72, 153, 0.05);
+}
+
+/* ===== 角色海报风格头部 ===== */
+.hero-banner-gradient {
+  background: linear-gradient(135deg, 
+    rgba(168, 85, 247, 0.9) 0%, 
+    rgba(139, 92, 246, 0.85) 25%, 
+    rgba(236, 72, 153, 0.8) 50%, 
+    rgba(251, 113, 133, 0.85) 75%, 
+    rgba(168, 85, 247, 0.9) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-banner-gradient::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 40%);
+  animation: float-gentle 8s ease-in-out infinite;
+}
+
+/* ===== 评分星星金色发光 ===== */
+.rating-stars-glow {
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+}
+
+/* ===== 滚动条美化 ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(168, 85, 247, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+}
+
+/* ===== 移动端优化 ===== */
+@media (max-width: 768px) {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* 维护公告滚动动画 */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); }
+}
+
+.animate-marquee {
+  animation: marquee 15s linear infinite;
+}
+/* ===== 安全区域适配（刘海屏等） ===== */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

@@ -1,0 +1,21 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/compensate",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/compensate.ts:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/:path*",
+      "mountPath": "/api",
+      "method": "",
+      "module": [
+        "api/[[path]].js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}

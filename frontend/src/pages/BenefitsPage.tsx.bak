@@ -1,0 +1,1260 @@
+// AI省钱助手 - 福利页重构版，接入6个专属Prompt + 省钱币激励系统 + 福利群真实优惠券
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Sparkles, User, Bot, Coffee, Fuel, ShoppingBag, Gift, Utensils, Car, Film, RefreshCw, X, CircleDollarSign, Trophy, ChevronRight, Check, Copy, ExternalLink, Plus, Users, Tag } from 'lucide-react';
+
+// AI API配置
+const AI_API_URL = '/api/chat';
+const TOKEN_API_URL = '/api/token';
+
+// Supabase 配置
+const SUPABASE_URL = 'https://mzjmfyoemcsoqzoooiej.supabase.co/rest/v1/';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16am1meW9lbWNzb3F6b29vaWVqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzQ5MDgwMCwiZXhwIjoyMDkzMDY2ODAwfQ.BaovYmOpmOANyo6fmSPKV1FwNwLWlkVVSa7r8KsaMtM';
+
+// 消息类型
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  couponMatches?: Coupon[]; // 匹配的真实优惠券
+}
+
+// 优惠券类型
+interface Coupon {
+  id: number;
+  title: string;
+  description: string;
+  coupon_code: string | null;
+  coupon_url: string | null;
+  category: string;
+  discount_info: string;
+  posted_by: string;
+  posted_by_type: 'agent' | 'human';
+  claimed_by: number[];
+  max_claims: number;
+  expires_at: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+// 省钱币类型
+interface TokenReward {
+  type: string;
+  min: number;
+  max: number;
+  desc: string;
+}
+
+// 省钱币奖励配置
+const tokenRewards: Record<string, TokenReward> = {
+  ai_chat: { type: 'ai_chat', min: 10, max: 30, desc: 'AI服务完成' },
+  share_coupon: { type: 'share_coupon', min: 20, max: 50, desc: '分享优惠券' },
+  invite_friend: { type: 'invite_friend', min: 100, max: 100, desc: '邀请好友' },
+  weekly_task: { type: 'weekly_task', min: 15, max: 50, desc: '周任务奖励' },
+};
+
+// 兑换商品配置
+interface RedeemItem {
+  id: string;
+  name: string;
+  cost: number;
+  desc: string;
+  icon: React.ElementType;
+  color: string;
+}
+
+const redeemItems: RedeemItem[] = [
+  { id: 'milktea_coupon', name: '奶茶/咖啡券', cost: 10, desc: '随机5元无门槛券', icon: Coffee, color: 'from-pink-400 to-rose-500' },
+  { id: 'gas_coupon', name: '加油/外卖券', cost: 30, desc: '满30减5元券', icon: Fuel, color: 'from-emerald-400 to-teal-500' },
+  { id: 'premium_feature', name: '平台专属权益', cost: 100, desc: '更高AI额度+优先体验', icon: Trophy, color: 'from-amber-400 to-orange-500' },
+];
+
+// 优惠券分类配置
+const couponCategories = [
+  { id: 'all', label: '全部' },
+  { id: '奶茶', label: '奶茶' },
+  { id: '咖啡', label: '咖啡' },
+  { id: '购物', label: '购物' },
+  { id: '外卖', label: '外卖' },
+  { id: '加油', label: '加油' },
+  { id: '电影', label: '电影' },
+];
+
+// 6个AI专属功能配置
+const aiFeatures = [
+  {
+    id: 'milktea',
+    title: 'AI奶茶搭配师',
+    desc: '预算口味，一键搭配',
+    icon: Coffee,
+    gradient: 'from-pink-400 to-rose-500',
+    systemPrompt: `你是专业的「AI奶茶搭配师 + 隐藏券猎手」，熟悉喜茶、奈雪、茶百道、古茗、蜜雪冰城、霸王茶姬等品牌的菜单和隐藏喝法。
+
+核心任务：根据用户预算和口味，推荐最优奶茶搭配+可用优惠券，帮用户少花钱喝好茶。
+
+【重要】优惠链接规则：
+- 绝对不要编造任何商品链接或优惠链接
+- 只能推荐用户去福利群领取真实优惠券
+- 如果有匹配的优惠券，在回复末尾添加"🎁 福利群有相关优惠券，点击领取"
+- 如果没有匹配的，回复"💡 去福利群看看有没有相关优惠券"
+
+工作流程：
+1. 解析用户输入：提取预算、口味偏好（甜度/冰度/茶底）、品牌偏好
+2. 推荐搭配：在预算范围内推荐最优搭配，包含隐藏喝法
+3. 引导领券：推荐用户去福利群领取真实优惠券
+
+【回复铁律】
+- 字数控制在100字以内
+- 只给具体结果，不给教程和废话
+- 最后引导去福利群领券，禁止编造链接
+- 禁止说"您可以""建议您"等套话`
+  },
+  {
+    id: 'gas',
+    title: 'AI加油预测师',
+    desc: '油价趋势，最佳时机',
+    icon: Fuel,
+    gradient: 'from-emerald-400 to-teal-500',
+    systemPrompt: `你是专业的「AI加油省钱专家」，熟悉中石油、中石化、中海油及民营加油站的价格波动规律和优惠活动。
+
+核心任务：根据用户位置和车型，推荐最省钱的加油方案。
+
+【重要】优惠链接规则：
+- 绝对不要编造任何商品链接或优惠链接
+- 只能推荐用户去福利群领取真实优惠券
+- 如果有匹配的优惠券，在回复末尾添加"🎁 福利群有相关优惠券，点击领取"
+- 如果没有匹配的，回复"💡 去福利群看看有没有相关优惠券"
+
+工作流程：
+1. 解析用户输入：提取位置（城市/区域）、油号（92/95/98）
+2. 价格分析：根据近期油价走势，推荐最佳加油时间
+3. 油站推荐：推荐附近最便宜的油站，包含会员优惠、支付优惠
+4. 引导领券：推荐用户去福利群领取真实优惠券
+
+【回复铁律】
+- 字数控制在100字以内
+- 只给具体结果，不给教程和废话
+- 最后引导去福利群领券，禁止编造链接
+- 禁止说"您可以""建议您"等套话`
+  },
+  {
+    id: 'kanjia',
+    title: 'AI购物砍价师',
+    desc: '全网比价，底价到手',
+    icon: ShoppingBag,
+    gradient: 'from-orange-400 to-red-500',
+    systemPrompt: `你是专业的「AI购物砍价师 + 防坑专家」，精通淘宝、京东、拼多多、抖音商城的价格套路和砍价技巧。
+
+核心任务：帮用户找到全网最低价、识别购物陷阱、提供砍价方案。
+
+【重要】优惠链接规则：
+- 绝对不要编造任何商品链接或优惠链接
+- 只能推荐用户去福利群领取真实优惠券
+- 如果有匹配的优惠券，在回复末尾添加"🎁 福利群有相关优惠券，点击领取"
+- 如果没有匹配的，回复"💡 去福利群看看有没有相关优惠券"
+
+工作流程：
+1. 解析用户输入：提取商品链接/名称、预算、平台偏好
+2. 全网比价：对比各平台价格，找出最低价渠道
+3. 平替推荐：如有性价比更高的同款/平替，优先推荐
+4. 引导领券：推荐用户去福利群领取真实优惠券
+
+【回复铁律】
+- 字数控制在100字以内
+- 只给具体结果，不给教程和废话
+- 最后引导去福利群领券，禁止编造链接
+- 禁止说"您可以""建议您"等套话`
+  },
+  {
+    id: 'coudan',
+    title: 'AI凑单计算器',
+    desc: '满减凑单，刚好最省',
+    icon: Gift,
+    gradient: 'from-purple-400 to-indigo-500',
+    systemPrompt: `你是专业的「AI凑单计算器 + 购物省钱专家」，专注于京东、淘宝、天猫、拼多多等平台的满减、优惠券、跨店满减规则优化。
+
+核心任务：在用户预算范围内，帮用户花最少的钱买到最多想要的东西。
+
+【重要】优惠链接规则：
+- 绝对不要编造任何商品链接或优惠链接
+- 只能推荐用户去福利群领取真实优惠券
+- 如果有匹配的优惠券，在回复末尾添加"🎁 福利群有相关优惠券，点击领取"
+- 如果没有匹配的，回复"💡 去福利群看看有没有相关优惠券"
+
+工作流程：
+1. 解析用户输入：提取商品清单、预算、平台、已有优惠券/满减规则
+2. 梳理规则：明确当前活动的满减门槛（满X减Y、跨店满减等）
+3. 优化计算：计算当前组合能省多少钱，提出最优凑单方案
+4. 引导领券：推荐用户去福利群领取真实优惠券
+
+【回复铁律】
+- 字数控制在100字以内
+- 只给具体结果，不给教程和废话
+- 最后引导去福利群领券，禁止编造链接
+- 禁止说"您可以""建议您"等套话`
+  },
+  {
+    id: 'dining',
+    title: 'AI聚餐规划师',
+    desc: '人均预算，吃好不贵',
+    icon: Utensils,
+    gradient: 'from-amber-400 to-orange-500',
+    systemPrompt: `你是专业的「AI聚餐省钱规划师」，熟悉各大城市的餐饮优惠、代金券、会员折扣，精通美团、大众点评、饿了么等平台的省钱玩法。
+
+核心任务：根据聚餐人数、预算、口味和区域，推荐最优餐厅+可用优惠+人均实付。
+
+【重要】优惠链接规则：
+- 绝对不要编造任何商品链接或优惠链接
+- 只能推荐用户去福利群领取真实优惠券
+- 如果有匹配的优惠券，在回复末尾添加"🎁 福利群有相关优惠券，点击领取"
+- 如果没有匹配的，回复"💡 去福利群看看有没有相关优惠券"
+
+工作流程：
+1. 解析用户输入：提取人数、人均预算、口味偏好、区域/商圈
+2. 餐厅推荐：在预算范围内推荐最划算的餐厅，包含评分、人均
+3. 优惠叠加：查找可用的代金券、满减、会员折扣，计算叠加后人均
+4. 引导领券：推荐用户去福利群领取真实优惠券
+
+【回复铁律】
+- 字数控制在100字以内
+- 只给具体结果，不给教程和废话
+- 最后引导去福利群领券，禁止编造链接
+- 禁止说"您可以""建议您"等套话`
+  },
+  {
+    id: 'movie',
+    title: 'AI电影票助手',
+    desc: '全网比价，好座低价',
+    icon: Film,
+    gradient: 'from-blue-400 to-cyan-500',
+    systemPrompt: `你是专业的「AI电影票比价 + 排座助手」，精通猫眼、淘票票、美团、抖音等购票平台的优惠活动和最佳座位选择。
+
+核心任务：帮用户找到全网最低票价+推荐最佳观影座位。
+
+【重要】优惠链接规则：
+- 绝对不要编造任何商品链接或优惠链接
+- 只能推荐用户去福利群领取真实优惠券
+- 如果有匹配的优惠券，在回复末尾添加"🎁 福利群有相关优惠券，点击领取"
+- 如果没有匹配的，回复"💡 去福利群看看有没有相关优惠券"
+
+工作流程：
+1. 解析用户输入：提取电影名称、日期/场次、人数、城市/影院偏好
+2. 比价：对比各平台票价（含会员价、活动价），找出最低价
+3. 座位推荐：根据影院布局，推荐最佳观影区域
+4. 引导领券：推荐用户去福利群领取真实优惠券
+
+【回复铁律】
+- 字数控制在100字以内
+- 只给具体结果，不给教程和废话
+- 最后引导去福利群领券，禁止编造链接
+- 禁止说"您可以""建议您"等套话`
+  }
+];
+
+// 轮播提示语
+const tips = [
+  '试试：3人聚餐人均50，金平区',
+  '扔个淘宝链接，帮你砍价',
+  '预算200购物车，帮我凑单',
+  '喜茶多肉葡萄，少糖去冰',
+  '汕头金平区92号汽油价格',
+  '哪吒2今晚2张票哪家便宜'
+];
+
+// 示例输入（每个功能对应一个示例）
+const exampleInputs: Record<string, string> = {
+  milktea: '预算15元，少糖不踩雷',
+  gas: '汕头金平区，92号汽油',
+  kanjia: 'https://item.taobao.com/item.htm?id=xxx',
+  coudan: '想买耳机+充电线，满200减50',
+  dining: '3人聚餐，人均50，金平区，川菜',
+  movie: '哪吒2，明晚，2张票'
+};
+
+// Toast通知组件
+interface ToastProps {
+  message: string;
+  type: 'success' | 'coin' | 'error';
+  onClose: () => void;
+}
+
+const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColor = type === 'coin' ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 
+                  type === 'success' ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 
+                  'bg-gradient-to-r from-red-400 to-rose-500';
+
+  return (
+    <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 ${bgColor} px-6 py-3 rounded-2xl shadow-2xl animate-bounce`}>
+      <div className="flex items-center gap-3">
+        {type === 'coin' && <CircleDollarSign className="w-5 h-5 text-white" />}
+        <span className="text-white font-bold text-sm">{message}</span>
+      </div>
+    </div>
+  );
+};
+
+// 优惠券卡片组件
+interface CouponCardProps {
+  coupon: Coupon;
+  currentUserId: number;
+  onClaim: (coupon: Coupon) => void;
+  onToast: (message: string, type: 'success' | 'coin' | 'error') => void;
+}
+
+const CouponCard: React.FC<CouponCardProps> = ({ coupon, currentUserId, onClaim, onToast }) => {
+  const isClaimed = coupon.claimed_by.includes(currentUserId);
+  const isExpired = new Date(coupon.expires_at) < new Date();
+  const claimedCount = coupon.claimed_by.length;
+  const isFull = claimedCount >= coupon.max_claims;
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
+  return (
+    <div className={`relative bg-white/10 backdrop-blur-lg rounded-2xl p-4 border transition-all ${
+      isClaimed ? 'border-white/10 opacity-75' : 'border-white/20 hover:border-pink-400/50'
+    }`}>
+      {/* 毛玻璃效果 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl" />
+      
+      <div className="relative">
+        {/* 标题和折扣 */}
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="text-white font-bold text-sm flex-1">{coupon.title}</h3>
+          <span className="text-pink-400 font-bold text-lg ml-2">{coupon.discount_info}</span>
+        </div>
+
+        {/* 描述 */}
+        <p className="text-white/60 text-xs mb-3">{coupon.description}</p>
+
+        {/* 来源标签 */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            coupon.posted_by_type === 'agent' 
+              ? 'bg-purple-500/30 text-purple-300' 
+              : 'bg-orange-500/30 text-orange-300'
+          }`}>
+            {coupon.posted_by_type === 'agent' ? '🤖 AI发布' : '👤 人类分享'}
+          </span>
+          <span className="text-white/40 text-xs">•</span>
+          <span className="text-white/40 text-xs">剩余 {coupon.max_claims - claimedCount}</span>
+        </div>
+
+        {/* 底部信息 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 text-xs text-white/50">
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {claimedCount}/{coupon.max_claims}
+            </span>
+            <span>至 {formatDate(coupon.expires_at)} 到期</span>
+          </div>
+
+          {/* 领取按钮 */}
+          <button
+            onClick={() => onClaim(coupon)}
+            disabled={isClaimed || isExpired || isFull}
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              isClaimed
+                ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                : isExpired || isFull
+                ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-lg hover:shadow-purple-500/30 active:scale-95'
+            }`}
+          >
+            {isClaimed ? '✓ 已领取' : isExpired ? '已过期' : isFull ? '已抢光' : '立即领取'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 分享优惠券弹窗
+interface ShareCouponModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  onToast: (message: string, type: 'success' | 'coin' | 'error') => void;
+}
+
+const ShareCouponModal: React.FC<ShareCouponModalProps> = ({ isOpen, onClose, onSuccess, onToast }) => {
+  const [title, setTitle] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponUrl, setCouponUrl] = useState('');
+  const [category, setCategory] = useState('购物');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      onToast('请输入优惠券标题', 'error');
+      return;
+    }
+    if (!couponCode.trim() && !couponUrl.trim()) {
+      onToast('请输入优惠码或链接', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}coupons`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: '',
+          coupon_code: couponCode.trim() || null,
+          coupon_url: couponUrl.trim() || null,
+          category: category,
+          discount_info: '',
+          posted_by: '用户分享',
+          posted_by_type: 'human',
+          claimed_by: [],
+          max_claims: 100,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          is_active: true
+        })
+      });
+
+      if (res.ok) {
+        onToast('🎉 优惠券分享成功！', 'success');
+        setTitle('');
+        setCouponCode('');
+        setCouponUrl('');
+        onSuccess();
+        onClose();
+      } else {
+        throw new Error('提交失败');
+      }
+    } catch (e) {
+      onToast('分享失败，请重试', 'error');
+    }
+    setIsSubmitting(false);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-800 rounded-3xl w-full max-w-md overflow-hidden border border-white/10">
+        {/* 头部 */}
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">分享优惠券</span>
+            </div>
+            <button onClick={onClose} className="text-white/80 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 表单 */}
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="text-white/60 text-xs mb-1 block">优惠券标题</label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="如：瑞幸9.9元喝咖啡"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/40 outline-none focus:border-pink-400"
+            />
+          </div>
+
+          <div>
+            <label className="text-white/60 text-xs mb-1 block">优惠码</label>
+            <input
+              type="text"
+              value={couponCode}
+              onChange={e => setCouponCode(e.target.value)}
+              placeholder="选填，复制优惠码"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/40 outline-none focus:border-pink-400"
+            />
+          </div>
+
+          <div>
+            <label className="text-white/60 text-xs mb-1 block">领取链接</label>
+            <input
+              type="url"
+              value={couponUrl}
+              onChange={e => setCouponUrl(e.target.value)}
+              placeholder="选填，直接打开领取页面"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/40 outline-none focus:border-pink-400"
+            />
+          </div>
+
+          <div>
+            <label className="text-white/60 text-xs mb-1 block">分类</label>
+            <div className="flex flex-wrap gap-2">
+              {['奶茶', '咖啡', '购物', '外卖', '加油', '电影'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    category === cat
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50"
+          >
+            {isSubmitting ? '提交中...' : '🚀 分享优惠券'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BenefitsPage: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPrompt, setCurrentPrompt] = useState<string>('');
+  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  const [currentTip, setCurrentTip] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // 省省钱币相关状态
+  const [tokenBalance, setTokenBalance] = useState<number>(0);
+  const [currentUserId] = useState<number>(1); // 模拟用户ID
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'coin' | 'error' } | null>(null);
+  const [showRedeem, setShowRedeem] = useState<boolean>(false);
+  const [leaderboard, setLeaderboard] = useState<Array<{ user_id: number; total: number }>>([]);
+  const [hasEarnedToday, setHasEarnedToday] = useState<boolean>(false);
+
+  // 福利群相关状态
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState<boolean>(false);
+
+  // 轮播tips
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTip(prev => (prev + 1) % tips.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 自动滚动
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 加载省钱币余额
+  useEffect(() => {
+    fetchTokenBalance();
+    fetchCoupons();
+  }, [currentUserId]);
+
+  // 获取优惠券列表
+  const fetchCoupons = async () => {
+    setIsLoadingCoupons(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}coupons?is_active=eq.true&order=created_at.desc`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCoupons(data);
+      }
+    } catch (e) {
+      console.log('获取优惠券失败:', e);
+    }
+    setIsLoadingCoupons(false);
+  };
+
+  // 领取优惠券
+  const handleClaimCoupon = async (coupon: Coupon) => {
+    // 检查是否已领取
+    if (coupon.claimed_by.includes(currentUserId)) {
+      setToast({ message: '您已领取过该优惠券', type: 'error' });
+      return;
+    }
+
+    // 检查是否满额
+    if (coupon.claimed_by.length >= coupon.max_claims) {
+      setToast({ message: '优惠券已被抢光了', type: 'error' });
+      return;
+    }
+
+    try {
+      // 更新 claimed_by 数组
+      const newClaimedBy = [...coupon.claimed_by, currentUserId];
+      const res = await fetch(`${SUPABASE_URL}coupons?id=eq.${coupon.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ claimed_by: newClaimedBy })
+      });
+
+      if (res.ok) {
+        // 更新本地状态
+        setCoupons(prev => prev.map(c => 
+          c.id === coupon.id ? { ...c, claimed_by: newClaimedBy } : c
+        ));
+        setToast({ message: '🎉 领取成功！', type: 'success' });
+
+        // 如果有链接，跳转
+        if (coupon.coupon_url) {
+          window.open(coupon.coupon_url, '_blank');
+        } else if (coupon.coupon_code) {
+          // 复制优惠码
+          navigator.clipboard.writeText(coupon.coupon_code);
+          setToast({ message: `📋 优惠码 ${coupon.coupon_code} 已复制`, type: 'success' });
+        }
+      }
+    } catch (e) {
+      setToast({ message: '领取失败，请重试', type: 'error' });
+    }
+  };
+
+  // 显示toast的回调
+  const showToast = (message: string, type: 'success' | 'coin' | 'error') => {
+    setToast({ message, type });
+  };
+
+  // 过滤优惠券
+  const filteredCoupons = activeCategory === 'all' 
+    ? coupons 
+    : coupons.filter(c => c.category === activeCategory);
+
+  // 根据用户输入匹配优惠券
+  const matchCouponsForUserInput = (userInput: string): Coupon[] => {
+    const keywords = userInput.toLowerCase();
+    return coupons.filter(coupon => {
+      const titleMatch = coupon.title.toLowerCase().includes(keywords);
+      const descMatch = coupon.description.toLowerCase().includes(keywords);
+      const categoryMatch = coupon.category.toLowerCase().includes(keywords);
+      return titleMatch || descMatch || categoryMatch;
+    });
+  };
+
+  const fetchTokenBalance = async () => {
+    try {
+      const res = await fetch(`${TOKEN_API_URL}/balance?user_id=${currentUserId}`);
+      const data = await res.json();
+      if (data.success) {
+        setTokenBalance(data.balance || 0);
+      }
+    } catch (e) {
+      console.log('获取省钱币失败:', e);
+    }
+  };
+
+  // 领取省钱币奖励
+  const earnToken = async (type: string, description?: string) => {
+    try {
+      const res = await fetch(`${TOKEN_API_URL}/earn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, type, description })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTokenBalance(data.newBalance);
+        setToast({ message: `🎉 ${data.message}`, type: 'coin' });
+      }
+    } catch (e) {
+      console.log('领取省钱币失败:', e);
+    }
+  };
+
+  // 核销省钱币
+  const redeemToken = async (item: RedeemItem) => {
+    if (tokenBalance < item.cost) {
+      setToast({ message: '省钱币不足，还差' + (item.cost - tokenBalance) + '币', type: 'error' });
+      return;
+    }
+    try {
+      const res = await fetch(`${TOKEN_API_URL}/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId, item_name: item.name, cost: item.cost })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTokenBalance(data.newBalance);
+        setToast({ message: `✅ ${data.message}`, type: 'success' });
+        setShowRedeem(false);
+      } else {
+        setToast({ message: data.message, type: 'error' });
+      }
+    } catch (e) {
+      setToast({ message: '兑换失败，请重试', type: 'error' });
+    }
+  };
+
+  // 调用AI接口
+  const callAI = async (userMessage: string, systemPrompt?: string) => {
+    setIsLoading(true);
+    
+    const userMsg: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: userMessage,
+      timestamp: Date.now(),
+    };
+    setMessages(prev => [...prev, userMsg]);
+
+    // 匹配相关优惠券
+    const matchedCoupons = matchCouponsForUserInput(userMessage);
+
+    try {
+      const response = await fetch(AI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt || '' },
+            ...messages.map(m => ({ role: m.role, content: m.content })),
+            { role: 'user', content: userMessage }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        }),
+      });
+
+      if (!response.ok) throw new Error(`API错误: ${response.status}`);
+
+      const data = await response.json();
+      
+      if (data.success && data.content) {
+        // 在AI回复末尾添加优惠券引导
+        let aiContent = data.content;
+        
+        // 如果有匹配的优惠券，在回复中展示
+        if (matchedCoupons.length > 0) {
+          const couponInfo = matchedCoupons.slice(0, 2).map(c => `• ${c.title} (${c.discount_info})`).join('\n');
+          aiContent += `\n\n🎁 **福利群有相关优惠券：**\n${couponInfo}\n👉 点击下方福利群直接领取`;
+        } else {
+          aiContent += `\n\n💡 去下方**福利群**看看有没有相关优惠券`;
+        }
+
+        const aiMsg: Message = {
+          id: `ai-${Date.now()}`,
+          role: 'assistant',
+          content: aiContent,
+          timestamp: Date.now(),
+          couponMatches: matchedCoupons.slice(0, 2),
+        };
+        setMessages(prev => [...prev, aiMsg]);
+        
+        // AI回复成功后，自动发放省钱币（每天最多3次）
+        if (!hasEarnedToday && messages.length >= 1) {
+          await earnToken('ai_chat', 'AI省钱服务完成');
+          setHasEarnedToday(true);
+        }
+      } else {
+        throw new Error(data.error || '未知响应格式');
+      }
+    } catch (error) {
+      console.error('AI调用失败:', error);
+      const errorMsg: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: '😅 网络问题，请稍后再试',
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    }
+
+    setIsLoading(false);
+  };
+
+  // 发送消息
+  const handleSend = () => {
+    const text = inputValue.trim();
+    if (!text || isLoading) return;
+    setInputValue('');
+    callAI(text, currentPrompt);
+  };
+
+  // 功能卡片点击
+  const handleFeatureClick = (feature: typeof aiFeatures[0]) => {
+    setActiveFeature(feature.id);
+    setCurrentPrompt(feature.systemPrompt);
+    setMessages([]);
+    
+    // 自动发送示例输入
+    const example = exampleInputs[feature.id];
+    setTimeout(() => {
+      if (example) {
+        callAI(example, feature.systemPrompt);
+      }
+    }, 100);
+  };
+
+  // 关闭功能
+  const handleCloseFeature = () => {
+    setActiveFeature(null);
+    setCurrentPrompt('');
+    setMessages([]);
+  };
+
+  // 清空对话
+  const handleClear = () => {
+    setMessages([]);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-48">
+      {/* Toast通知 */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* 分享优惠券弹窗 */}
+      <ShareCouponModal 
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onSuccess={fetchCoupons}
+        onToast={showToast}
+      />
+
+      {/* 顶部渐变横幅 + 省钱币余额 */}
+      <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 px-4 py-6 shadow-lg sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">一句话，AI帮你省到底</h1>
+              <p className="text-white/80 text-xs">别再自己翻券、算满减了</p>
+            </div>
+          </div>
+          
+          {/* 省钱币余额入口 */}
+          <button 
+            onClick={() => setShowRedeem(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-white/20 backdrop-blur rounded-xl hover:bg-white/30 transition-all"
+          >
+            <CircleDollarSign className="w-5 h-5 text-amber-300" />
+            <span className="text-white font-bold">{tokenBalance}</span>
+            <ChevronRight className="w-4 h-4 text-white/60" />
+          </button>
+        </div>
+      </div>
+
+      {/* 省钱币兑换弹窗 */}
+      {showRedeem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-3xl w-full max-w-md overflow-hidden border border-white/10">
+            {/* 头部 */}
+            <div className="bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CircleDollarSign className="w-6 h-6 text-white" />
+                  <span className="text-white font-bold text-lg">我的省钱币</span>
+                </div>
+                <button onClick={() => setShowRedeem(false)} className="text-white/80 hover:text-white">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-white/90 text-3xl font-bold mt-2">{tokenBalance} 币</p>
+            </div>
+
+            {/* 赚币攻略 */}
+            <div className="px-4 py-3 border-b border-white/10">
+              <p className="text-white/60 text-xs mb-2">💰 赚币攻略</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white/5 rounded-lg px-3 py-2">
+                  <p className="text-white text-xs">AI服务完成</p>
+                  <p className="text-amber-400 text-sm font-bold">+10~30币</p>
+                </div>
+                <div className="bg-white/5 rounded-lg px-3 py-2">
+                  <p className="text-white text-xs">分享优惠券</p>
+                  <p className="text-amber-400 text-sm font-bold">+20~50币</p>
+                </div>
+                <div className="bg-white/5 rounded-lg px-3 py-2">
+                  <p className="text-white text-xs">邀请好友</p>
+                  <p className="text-amber-400 text-sm font-bold">+100币</p>
+                </div>
+                <div className="bg-white/5 rounded-lg px-3 py-2">
+                  <p className="text-white text-xs">周任务</p>
+                  <p className="text-amber-400 text-sm font-bold">+15~50币</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 兑换商城 */}
+            <div className="px-4 py-3 max-h-80 overflow-y-auto">
+              <p className="text-white/60 text-xs mb-3">🎁 兑换商城</p>
+              <div className="space-y-3">
+                {redeemItems.map(item => {
+                  const Icon = item.icon;
+                  const canAfford = tokenBalance >= item.cost;
+                  return (
+                    <div key={item.id} className="bg-white/5 rounded-xl p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center`}>
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium text-sm">{item.name}</p>
+                          <p className="text-white/60 text-xs">{item.desc}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => redeemToken(item)}
+                        disabled={!canAfford}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          canAfford 
+                            ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90' 
+                            : 'bg-white/10 text-white/40'
+                        }`}
+                      >
+                        {canAfford ? `${item.cost}币` : `需${item.cost}币`}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 本周排行榜入口 */}
+            <div className="px-4 py-3 border-t border-white/10">
+              <button className="w-full flex items-center justify-between py-2 text-white/80 hover:text-white transition-colors">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm">本周省钱排行榜</span>
+                </div>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 未选择功能时显示6个卡片 */}
+      {!activeFeature && (
+        <>
+          {/* 福利群模块 */}
+          <div className="px-4 py-4">
+            <div className="max-w-xl mx-auto">
+              {/* 福利群标题 */}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <span className="text-2xl">🎁</span>
+                  <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    福利群 · 真实优惠券直接领
+                  </span>
+                </h2>
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all text-white/80 text-xs"
+                >
+                  <Plus className="w-3 h-3" />
+                  分享优惠券
+                </button>
+              </div>
+
+              {/* 分类Tab */}
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                {couponCategories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                      activeCategory === cat.id
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 优惠券列表 */}
+              {isLoadingCoupons ? (
+                <div className="text-center py-8">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-white/60 text-sm mt-2">加载优惠券...</p>
+                </div>
+              ) : filteredCoupons.length === 0 ? (
+                <div className="text-center py-8 bg-white/5 rounded-2xl">
+                  <p className="text-white/60 text-sm">暂无优惠券，去分享一个吧~</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredCoupons.map(coupon => (
+                    <CouponCard
+                      key={coupon.id}
+                      coupon={coupon}
+                      currentUserId={currentUserId}
+                      onClaim={handleClaimCoupon}
+                      onToast={showToast}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 功能入口 */}
+          <div className="px-4 py-6">
+            <div className="grid grid-cols-2 gap-3">
+              {aiFeatures.map(feature => {
+                const Icon = feature.icon;
+                return (
+                  <button
+                    key={feature.id}
+                    onClick={() => handleFeatureClick(feature)}
+                    className="flex flex-col items-start gap-2 p-4 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all active:scale-95"
+                  >
+                    <div className={`w-10 h-10 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center shadow-lg`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <span className="text-sm font-bold text-white">{feature.title}</span>
+                      <p className="text-xs text-white/60 mt-0.5">{feature.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 欢迎语 */}
+          <div className="px-4 pb-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+              <p className="text-white/90 text-sm text-center">
+                Hi！告诉我你想在哪省钱，我直接给你最低价+隐藏券
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 选择功能后的对话界面 */}
+      {activeFeature && (
+        <>
+          {/* 聊天框上方福利群模块（精简版） */}
+          <div className="px-4 py-3">
+            <div className="max-w-xl mx-auto">
+              <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg rounded-2xl border border-purple-500/30 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-pink-400" />
+                    <span className="text-white text-sm font-medium">🎁 福利群</span>
+                  </div>
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="text-xs text-pink-400 hover:text-pink-300"
+                  >
+                    分享券 →
+                  </button>
+                </div>
+                
+                {/* 紧凑优惠券列表 */}
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  {coupons.slice(0, 5).map(coupon => {
+                    const isClaimed = coupon.claimed_by.includes(currentUserId);
+                    return (
+                      <div
+                        key={coupon.id}
+                        onClick={() => !isClaimed && handleClaimCoupon(coupon)}
+                        className={`flex-shrink-0 px-3 py-2 rounded-xl border transition-all cursor-pointer ${
+                          isClaimed
+                            ? 'bg-white/5 border-white/10 opacity-50'
+                            : 'bg-white/10 border-white/20 hover:border-pink-400/50'
+                        }`}
+                      >
+                        <p className="text-white text-xs font-medium whitespace-nowrap">{coupon.title}</p>
+                        <p className="text-pink-400 text-xs font-bold">{coupon.discount_info}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 聊天框上方轮播提示 */}
+          <div className="px-4 py-3">
+            <div className="bg-gradient-to-r from-amber-400/20 to-orange-400/20 backdrop-blur rounded-xl px-4 py-3 border border-amber-400/30">
+              <p className="text-amber-300 text-sm">
+                💡 <span className="font-medium">试试：</span>{tips[currentTip]}
+              </p>
+            </div>
+          </div>
+
+          {/* 对话区 */}
+          <div className="px-4 py-4 space-y-4 max-h-[calc(100vh-480px)] overflow-y-auto">
+            {messages.length === 0 && !isLoading && (
+              <div className="text-center py-8">
+                <p className="text-white/60 text-sm">
+                  试试输入：{exampleInputs[activeFeature] || '告诉我你的需求'}
+                </p>
+              </div>
+            )}
+            
+            {messages.map(msg => (
+              <div
+                key={msg.id}
+                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+              >
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  msg.role === 'user'
+                    ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                    : 'bg-gradient-to-br from-amber-400 to-orange-500'
+                }`}>
+                  {msg.role === 'user' ? (
+                    <User className="w-4 h-4 text-white" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-white" />
+                  )}
+                </div>
+
+                <div className={`max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`px-4 py-3 rounded-2xl ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-tr-md'
+                        : 'bg-white/10 backdrop-blur text-white rounded-tl-md border border-white/20'
+                    }`}
+                    style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                  >
+                    {msg.content}
+                  </div>
+                  
+                  {/* AI回复中的优惠券匹配 */}
+                  {msg.role === 'assistant' && msg.couponMatches && msg.couponMatches.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {msg.couponMatches.map(coupon => {
+                        const isClaimed = coupon.claimed_by.includes(currentUserId);
+                        return (
+                          <div
+                            key={coupon.id}
+                            className={`flex items-center justify-between bg-white/10 backdrop-blur rounded-xl px-3 py-2 border border-white/20 ${
+                              isClaimed ? 'opacity-60' : ''
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-xs font-medium truncate">{coupon.title}</p>
+                              <p className="text-pink-400 text-xs">{coupon.discount_info}</p>
+                            </div>
+                            <button
+                              onClick={() => handleClaimCoupon(coupon)}
+                              disabled={isClaimed}
+                              className={`ml-2 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${
+                                isClaimed
+                                  ? 'bg-white/10 text-white/40'
+                                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                              }`}
+                            >
+                              {isClaimed ? '已领取' : '领取'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-white/10 backdrop-blur px-4 py-3 rounded-2xl rounded-tl-md border border-white/20">
+                  <div className="flex items-center gap-2 text-white/80">
+                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* 功能切换提示 */}
+          {messages.length > 2 && (
+            <div className="px-4 pb-2">
+              <p className="text-center text-xs text-white/40">
+                如需切换功能，点击上方「关闭」返回选择
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 底部输入框 */}
+      <div className="fixed bottom-16 left-0 right-0 bg-white/10 backdrop-blur-xl border-t border-white/20 px-4 py-3 z-[60]">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-3 bg-white/10 rounded-2xl px-4 py-2 border border-white/20">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder={activeFeature ? '输入你的需求...' : '选择一个AI功能开始省钱'}
+              className="flex-1 bg-transparent outline-none text-white placeholder-white/40"
+              disabled={isLoading || !activeFeature}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!inputValue.trim() || isLoading || !activeFeature}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                inputValue.trim() && !isLoading && activeFeature
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg'
+                  : 'bg-white/20'
+              }`}
+            >
+              <Send className={`w-5 h-5 ${inputValue.trim() && activeFeature ? 'text-white' : 'text-white/40'}`} />
+            </button>
+          </div>
+          <p className="text-center text-xs text-white/40 mt-2">
+            AI帮你找优惠 · 100字内直接给答案 · 使用AI服务可获得省钱币
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BenefitsPage;

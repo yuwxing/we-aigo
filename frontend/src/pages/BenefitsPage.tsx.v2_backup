@@ -1,0 +1,642 @@
+// 休闲农场 - 虚拟宠物领养与互动赚省钱币
+import React, { useState, useEffect, useCallback } from 'react';
+import { useUser } from '../contexts/UserContext';
+import { toast } from 'react-hot-toast';
+
+// API基础路径
+const API_BASE = '/api';
+
+// 宠物类型配置
+const PET_TYPES = {
+  cat: { emoji: '🐱', name: '小橘猫', personality: '慵懒可爱', color: 'from-orange-400 to-yellow-500' },
+  rabbit: { emoji: '🐰', name: '雪兔', personality: '温柔灵动', color: 'from-pink-300 to-purple-300' },
+  fox: { emoji: '🦊', name: '银狐', personality: '聪慧优雅', color: 'from-blue-400 to-cyan-400' }
+};
+
+// 互动配置
+const INTERACTIONS = {
+  feed: { emoji: '🍖', label: '喂食', color: 'from-amber-500 to-orange-500', tokens: 15, exp: 5 },
+  play: { emoji: '🎾', label: '玩耍', color: 'from-green-500 to-emerald-500', tokens: 10, exp: 5 },
+  clean: { emoji: '🛁', label: '清洁', color: 'from-blue-500 to-cyan-500', tokens: 5, exp: 3 },
+  checkin: { emoji: '📅', label: '签到', color: 'from-purple-500 to-pink-500', tokens: 50, exp: 10 }
+};
+
+// 类型定义
+interface Pet {
+  id: number;
+  pet_type: 'cat' | 'rabbit' | 'fox';
+  pet_name: string;
+  level: number;
+  exp: number;
+  mood: number;
+  hunger: number;
+  cooldowns: {
+    feed: { onCooldown: boolean; remaining: number };
+    play: { onCooldown: boolean; remaining: number };
+    clean: { onCooldown: boolean; remaining: number };
+    checkIn: { onCooldown: boolean; remaining: number };
+  };
+  history: Array<{ type: string; amount: number; created_at: string }>;
+}
+
+interface PetResponse {
+  success: boolean;
+  hasPet: boolean;
+  pet: Pet | null;
+  error?: string;
+}
+
+// 获取用户宠物信息
+async function fetchPet(userId: number): Promise<PetResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/pet?user_id=${userId}`);
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.error('获取宠物失败:', e);
+    return { success: false, hasPet: false, pet: null, error: '网络错误' };
+  }
+}
+
+// 领养宠物
+async function adoptPet(userId: number, petType: string, petName: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/pet/adopt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, pet_type: petType, pet_name: petName })
+    });
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    return { success: false, message: '网络错误，请重试' };
+  }
+}
+
+// 宠物互动
+async function interactPet(userId: number, action: string): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE}/pet/interact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, action })
+    });
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    return { success: false, error: '网络错误，请重试' };
+  }
+}
+
+// 初始化宠物表
+async function initPetTable(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/pet/init`, { method: 'POST' });
+    const data = await res.json();
+    return data.success;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 格式化时间
+function formatCooldown(seconds: number): string {
+  if (seconds <= 0) return '就绪';
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h${mins}m`;
+  return `${mins}m`;
+}
+
+// 获取宠物状态文案
+function getPetStatusText(mood: number, hunger: number): string {
+  const petType = 'cat'; // 默认
+  const emoji = PET_TYPES[petType as keyof typeof PET_TYPES].emoji;
+  
+  if (hunger < 20) return `${emoji} 肚子咕咕叫~快喂我吃的！`;
+  if (mood < 20) return `${emoji} 情绪低落，需要陪伴...`;
+  if (hunger < 40) return `${emoji} 有点饿了，想吃东西~`;
+  if (mood < 40) return `${emoji} 有点无聊，陪我玩会儿吧~`;
+  if (hunger < 60) return `${emoji} 吃饱喝足，心情不错~`;
+  if (mood < 60) return `${emoji} 心情愉悦，正悠闲休息~`;
+  return `${emoji} 非常开心！活力满满~`;
+}
+
+// 经验条颜色
+function getExpColor(level: number): string {
+  if (level >= 10) return 'from-yellow-400 to-amber-500';
+  if (level >= 5) return 'from-purple-400 to-pink-500';
+  return 'from-indigo-400 to-purple-500';
+}
+
+// 进度条颜色
+function getProgressColor(value: number): { bg: string; text: string } {
+  if (value >= 60) return { bg: 'bg-green-500', text: 'text-green-600' };
+  if (value >= 30) return { bg: 'bg-yellow-500', text: 'text-yellow-600' };
+  return { bg: 'bg-red-500', text: 'text-red-600' };
+}
+
+// 倒计时组件
+function CooldownTimer({ seconds, onReady }: { seconds: number; onReady: () => void }) {
+  const [remaining, setRemaining] = useState(seconds);
+
+  useEffect(() => {
+    setRemaining(seconds);
+  }, [seconds]);
+
+  useEffect(() => {
+    if (remaining <= 0) {
+      onReady();
+      return;
+    }
+    const timer = setInterval(() => {
+      setRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onReady();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [remaining, onReady]);
+
+  return (
+    <span className="text-xs text-gray-400 mt-1">
+      {formatCooldown(remaining)}
+    </span>
+  );
+}
+
+// 无宠物页面 - 宠物选择
+function NoPetSection({ onAdopt }: { onAdopt: (type: string, name: string) => void }) {
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [petName, setPetName] = useState('');
+  const [isAdopting, setIsAdopting] = useState(false);
+
+  const handleAdopt = async () => {
+    if (!selectedType || !petName.trim()) {
+      toast.error('请先选择宠物并输入名字');
+      return;
+    }
+    if (petName.length > 10) {
+      toast.error('名字太长了~');
+      return;
+    }
+    setIsAdopting(true);
+    await onAdopt(selectedType, petName.trim());
+    setIsAdopting(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-xl font-bold text-white mb-2">🌱 领养你的专属宠物</h2>
+        <p className="text-white/70 text-sm">选择一只心仪的小家伙，开始赚省钱币之旅！</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {Object.entries(PET_TYPES).map(([type, config]) => (
+          <button
+            key={type}
+            onClick={() => setSelectedType(type)}
+            className={`
+              relative p-4 rounded-2xl transition-all duration-300 transform
+              bg-white/10 backdrop-blur-md border-2
+              ${selectedType === type 
+                ? 'border-white/50 scale-105 shadow-lg bg-white/20' 
+                : 'border-white/20 hover:border-white/30 hover:scale-102'}
+            `}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center text-4xl shadow-lg`}>
+                {config.emoji}
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-bold text-white text-lg">{config.name}</div>
+                <div className="text-white/60 text-sm">性格：{config.personality}</div>
+              </div>
+              {selectedType === type && (
+                <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center">
+                  <span className="text-white text-sm">✓</span>
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {selectedType && (
+        <div className="space-y-3 animate-fadeIn">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-4">
+            <label className="block text-white/80 text-sm mb-2">
+              给 {PET_TYPES[selectedType as keyof typeof PET_TYPES].name} 取个名字吧~
+            </label>
+            <input
+              type="text"
+              value={petName}
+              onChange={(e) => setPetName(e.target.value)}
+              placeholder="输入宠物名字..."
+              maxLength={10}
+              className="
+                w-full px-4 py-3 rounded-xl
+                bg-white/20 backdrop-blur-sm
+                border border-white/30
+                text-white placeholder-white/40
+                focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/20
+                transition-all
+              "
+            />
+          </div>
+          
+          <button
+            onClick={handleAdopt}
+            disabled={!petName.trim() || isAdopting}
+            className={`
+              w-full py-4 rounded-2xl font-bold text-lg
+              bg-gradient-to-r from-purple-500 to-pink-500
+              text-white shadow-lg
+              transform transition-all duration-200
+              ${!petName.trim() || isAdopting 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:scale-105 active:scale-95'}
+            `}
+          >
+            {isAdopting ? '领养中...' : `🎉 领养 ${PET_TYPES[selectedType as keyof typeof PET_TYPES].name}`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 有宠物页面
+function HasPetSection({ pet, onRefresh, balance }: { pet: Pet; onRefresh: () => void; balance: number }) {
+  const [interacting, setInteracting] = useState<string | null>(null);
+  const [floatingCoins, setFloatingCoins] = useState<Array<{ id: number; amount: number; x: number }>>([]);
+
+  const petConfig = PET_TYPES[pet.pet_type];
+  
+  // 互动处理
+  const handleInteract = async (action: string) => {
+    if (interacting) return;
+    setInteracting(action);
+    
+    try {
+      const result = await interactPet(pet.id, action);
+      
+      if (result.success) {
+        // 显示金币飞出动画
+        const coinAmount = result.earned;
+        const newCoin = { id: Date.now(), amount: coinAmount, x: Math.random() * 60 + 20 };
+        setFloatingCoins(prev => [...prev, newCoin]);
+        setTimeout(() => {
+          setFloatingCoins(prev => prev.filter(c => c.id !== newCoin.id));
+        }, 1500);
+        
+        if (result.leveledUp) {
+          toast.success(`🎉 升级了！升到 Lv.${result.newLevel}！获得 +${coinAmount} 省钱币`);
+        } else {
+          toast.success(`+${coinAmount} 省钱币已到账！`);
+        }
+        
+        // 刷新宠物状态
+        setTimeout(onRefresh, 500);
+      } else {
+        toast.error(result.message || result.error || '操作失败');
+      }
+    } catch (e) {
+      toast.error('网络错误，请重试');
+    }
+    
+    setInteracting(null);
+  };
+
+  // 经验进度
+  const expProgress = (pet.exp / (pet.level * 20)) * 100;
+  
+  // 进度条颜色
+  const moodColors = getProgressColor(pet.mood);
+  const hungerColors = getProgressColor(pet.hunger);
+
+  return (
+    <div className="space-y-6">
+      {/* 宠物展示区 */}
+      <div className="text-center relative">
+        {/* 浮动金币 */}
+        {floatingCoins.map(coin => (
+          <div
+            key={coin.id}
+            className="absolute animate-floatUp pointer-events-none"
+            style={{ left: `${coin.x}%`, top: '0' }}
+          >
+            <span className="text-2xl font-bold text-yellow-300 drop-shadow-lg">
+              +{coin.amount} 💰
+            </span>
+          </div>
+        ))}
+        
+        <div className="relative inline-block">
+          <div className={`
+            w-28 h-28 rounded-full bg-gradient-to-br ${petConfig.color}
+            flex items-center justify-center text-6xl shadow-2xl
+            animate-petIdle
+            ${interacting ? 'animate-petBounce' : ''}
+          `}>
+            {petConfig.emoji}
+          </div>
+          {/* 等级光环 */}
+          <div className={`
+            absolute -top-2 -right-2 w-10 h-10 rounded-full
+            bg-gradient-to-br ${getExpColor(pet.level)}
+            flex items-center justify-center text-white font-bold text-sm
+            shadow-lg border-2 border-white
+          `}>
+            Lv.{pet.level}
+          </div>
+        </div>
+        
+        <h2 className="text-2xl font-bold text-white mt-4">{pet.pet_name}</h2>
+        
+        {/* 经验条 */}
+        <div className="mt-2 mx-8">
+          <div className="flex justify-between text-xs text-white/60 mb-1">
+            <span>经验</span>
+            <span>{pet.exp}/{pet.level * 20}</span>
+          </div>
+          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+            <div 
+              className={`h-full bg-gradient-to-r ${getExpColor(pet.level)} rounded-full transition-all duration-500`}
+              style={{ width: `${expProgress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 状态条区 */}
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 space-y-3">
+        {/* 心情 */}
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">❤️</span>
+          <div className="flex-1">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-white/80">心情</span>
+              <span className={moodColors.text}>{pet.mood}%</span>
+            </div>
+            <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${moodColors.bg} rounded-full transition-all duration-500`}
+                style={{ width: `${pet.mood}%` }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* 饱食度 */}
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🍖</span>
+          <div className="flex-1">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-white/80">饱食度</span>
+              <span className={hungerColors.text}>{pet.hunger}%</span>
+            </div>
+            <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${hungerColors.bg} rounded-full transition-all duration-500`}
+                style={{ width: `${pet.hunger}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 宠物状态文字 */}
+      <div className="text-center py-2">
+        <p className="text-white/80 text-sm italic">
+          {getPetStatusText(pet.mood, pet.hunger)}
+        </p>
+      </div>
+
+      {/* 互动按钮区 */}
+      <div className="grid grid-cols-3 gap-3">
+        {(['feed', 'play', 'clean'] as const).map(action => {
+          const config = INTERACTIONS[action];
+          const cooldown = pet.cooldowns[action];
+          const isOnCooldown = cooldown.onCooldown;
+          
+          return (
+            <button
+              key={action}
+              onClick={() => handleInteract(action)}
+              disabled={isOnCooldown || interacting !== null}
+              className={`
+                relative p-4 rounded-2xl transition-all duration-200
+                bg-gradient-to-br ${config.color}
+                ${isOnCooldown 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:scale-105 active:scale-95 shadow-lg'}
+                ${interacting === action ? 'animate-pulse' : ''}
+              `}
+            >
+              <div className="text-3xl mb-1">{config.emoji}</div>
+              <div className="text-white font-medium text-sm">{config.label}</div>
+              <div className="text-white/80 text-xs mt-1">
+                {isOnCooldown ? (
+                  <CooldownTimer 
+                    seconds={cooldown.remaining} 
+                    onReady={() => {}} 
+                  />
+                ) : (
+                  `+${config.tokens}币`
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 签到按钮 */}
+      <button
+        onClick={() => handleInteract('checkin')}
+        disabled={pet.cooldowns.checkIn.onCooldown || interacting !== null}
+        className={`
+          w-full py-4 rounded-2xl font-bold text-lg
+          bg-gradient-to-r from-purple-500 to-pink-500
+          text-white shadow-lg
+          transform transition-all duration-200
+          ${pet.cooldowns.checkIn.onCooldown 
+            ? 'opacity-50 cursor-not-allowed' 
+            : 'hover:scale-105 active:scale-95'}
+        `}
+      >
+        {pet.cooldowns.checkIn.onCooldown ? (
+          <span className="flex items-center justify-center gap-2">
+            明日再来 📅 <CooldownTimer seconds={pet.cooldowns.checkIn.remaining} onReady={() => {}} />
+          </span>
+        ) : (
+          <span>📅 每日签到 +50 省钱币</span>
+        )}
+      </button>
+
+      {/* 赚钱记录 */}
+      {pet.history && pet.history.length > 0 && (
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <span>📜</span> 赚币记录
+          </h3>
+          <div className="space-y-2">
+            {pet.history.map((record, index) => {
+              const actionType = record.type.replace('pet_', '');
+              const actionConfig = INTERACTIONS[actionType as keyof INTERACTIONS];
+              return (
+                <div 
+                  key={index}
+                  className="flex items-center justify-between py-2 border-b border-white/10 last:border-0"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{actionConfig?.emoji || '✨'}</span>
+                    <span className="text-white/80 text-sm">
+                      {actionConfig?.label || actionType}奖励
+                    </span>
+                  </div>
+                  <span className="text-yellow-300 font-medium">
+                    +{record.amount}币
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 提示 */}
+      <div className="text-center text-white/50 text-xs space-y-1">
+        <p>💡 每小时心情-2，饱食度-3</p>
+        <p>🎁 升级可获得100省钱币奖励</p>
+      </div>
+    </div>
+  );
+}
+
+// 主组件
+export default function BenefitsPage() {
+  const { user, balance, updateBalance } = useUser();
+  const userId = user?.id || 18; // 默认用户ID
+  
+  const [petData, setPetData] = useState<PetResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(false);
+
+  // 获取宠物数据
+  const fetchPetData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 尝试初始化表
+      if (initializing) {
+        await initPetTable();
+      }
+      const data = await fetchPet(userId);
+      setPetData(data);
+    } catch (e) {
+      console.error('获取宠物失败:', e);
+    }
+    setLoading(false);
+    setInitializing(false);
+  }, [userId, initializing]);
+
+  useEffect(() => {
+    fetchPetData();
+  }, [fetchPetData]);
+
+  // 领养处理
+  const handleAdopt = async (type: string, name: string) => {
+    const result = await adoptPet(userId, type, name);
+    if (result.success) {
+      toast.success(result.message);
+      await fetchPetData();
+    } else {
+      toast.error(result.error || '领养失败');
+    }
+  };
+
+  return (
+    <div 
+      className="min-h-screen pb-24"
+      style={{
+        background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #f472b6 100%)',
+      }}
+    >
+      {/* 顶部横幅 */}
+      <div className="sticky top-0 z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div className="max-w-xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🌱</span>
+              <h1 className="text-xl font-bold text-white">休闲农场</h1>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
+              <span className="text-xl">💰</span>
+              <span className="text-white font-bold">{balance.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 主内容区 */}
+      <div className="max-w-xl mx-auto px-4 py-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full border-4 border-white/30 border-t-white animate-spin mx-auto mb-4" />
+              <p className="text-white/80">加载中...</p>
+            </div>
+          </div>
+        ) : petData?.hasPet && petData.pet ? (
+          <HasPetSection 
+            pet={petData.pet} 
+            onRefresh={fetchPetData}
+            balance={balance}
+          />
+        ) : (
+          <NoPetSection onAdopt={handleAdopt} />
+        )}
+      </div>
+
+      {/* 底部收益提示 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-md border-t border-white/20 py-3">
+        <div className="max-w-xl mx-auto text-center">
+          <p className="text-white/70 text-sm">
+            🌾 互动可获得省钱币奖励 | 每日签到额外+50币 | 升级奖励+100币
+          </p>
+        </div>
+      </div>
+
+      {/* 动画样式 */}
+      <style>{`
+        @keyframes petIdle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes petBounce {
+          0%, 100% { transform: scale(1) translateY(0); }
+          25% { transform: scale(1.1) translateY(-15px); }
+          50% { transform: scale(0.95) translateY(0); }
+          75% { transform: scale(1.05) translateY(-8px); }
+        }
+        @keyframes floatUp {
+          0% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-petIdle { animation: petIdle 3s ease-in-out infinite; }
+        .animate-petBounce { animation: petBounce 0.6s ease-in-out; }
+        .animate-floatUp { animation: floatUp 1.5s ease-out forwards; }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+      `}</style>
+    </div>
+  );
+}
