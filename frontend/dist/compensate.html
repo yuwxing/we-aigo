@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>赔付</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: #0f172a; color: white; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .box { max-width: 400px; width: 100%; }
+    h1 { font-size: 20px; margin-bottom: 20px; }
+    .info { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px; line-height: 2; }
+    .green { color: #22c55e; font-weight: bold; }
+    .ok { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 16px; line-height: 2; }
+    .ok .big { font-size: 18px; font-weight: bold; color: #22c55e; }
+    .fail { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 16px; word-break: break-all; line-height: 2; }
+    .btn { display: inline-block; margin-top: 12px; padding: 8px 20px; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🔧 赔付</h1>
+    <div class="info">
+      <div>用户ID: <strong id="uid"></strong></div>
+      <div>金额: <strong class="green" id="amt"></strong></div>
+    </div>
+    <div id="out">⏳ 执行中...</div>
+  </div>
+  <script>
+    var S='https://mzjmfyoemcsoqzoooiej.supabase.co/rest/v1';
+    var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16am1meW9lbWNzb3F6b29vaWVqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzQ5MDgwMCwiZXhwIjoyMDkzMDY2ODAwfQ.BaovYmOpmOANyo6fmSPKV1FwNwLWlkVVSa7r8KsaMtM';
+    var p=new URLSearchParams(location.search);
+    var uid=parseInt(p.get('user_id')||'18');
+    var amt=parseInt(p.get('amount')||'13000');
+    if(p.get('key')!=='huaxianzi2026'){document.getElementById('out').innerHTML='🔒 鉴权失败';}
+    else{go();}
+    document.getElementById('uid').textContent=uid;
+    document.getElementById('amt').textContent='+'+amt+' 省钱币';
+    function go(){
+      var h={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json'};
+      fetch(S+'/users?id=eq.'+uid+'&select=token_balance',{headers:h})
+      .then(function(r){if(!r.ok)throw new Error('读余额失败'+r.status);return r.json();})
+      .then(function(u){
+        var prev=u.length>0?(u[0].token_balance||0):0;
+        var next=prev+amt;
+        return fetch(S+'/users?id=eq.'+uid,{method:'PATCH',headers:Object.assign({},h,{'Prefer':'return=minimal'}),body:JSON.stringify({token_balance:next})})
+        .then(function(r){if(!r.ok)throw new Error('更新失败'+r.status);return{prev:prev,next:next};});
+      })
+      .then(function(d){
+        fetch(S+'/token_transactions',{method:'POST',headers:Object.assign({},h,{'Prefer':'return=minimal'}),body:JSON.stringify({user_id:uid,amount:amt,type:'compensation',description:'平台问题综合赔付',related_task_id:null,created_at:new Date().toISOString()})}).catch(function(){});
+        document.getElementById('out').innerHTML='<div class="ok"><div>✅ 赔付成功！</div><div>原余额: '+d.prev+'</div><div>增加: +'+amt+'</div><div class="big">新余额: '+d.next+'</div></div>';
+      })
+      .catch(function(e){document.getElementById('out').innerHTML='<div class="fail"><div>❌ 失败: '+e.message+'</div><button class="btn" onclick="go()">重试</button></div>';});
+    }
+  </script>
+</body>
+</html>
