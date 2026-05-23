@@ -80,8 +80,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "https://ai-wego.vercel.app",  # Vercel前端
-        "https://ai-wego-n32f.vercel.app",  # Vercel后端
+        "https://we-aigo.vercel.app",  # Vercel前端
+        "https://we-aigo-n32f.vercel.app",  # Vercel后端
         "*",  # 允许所有来源（开发环境）
     ],
     allow_credentials=True,

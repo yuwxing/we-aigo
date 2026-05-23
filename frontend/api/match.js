@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
     // Try backend first
     try {
-      const response = await fetch(`https://api.ai-wego.top/api/v1/tasks/${taskId}/match`, {
+      const response = await fetch(`https://api.we-aigo.top/api/v1/tasks/${taskId}/match`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: parseInt(agent_id) }),

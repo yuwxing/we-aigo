@@ -181,7 +181,7 @@ export async function onRequest(context) {
     }
 
     // Fallback: proxy to Worker
-    const workerUrl = `https://ai-wego-worker.ai-wego-api.workers.dev${path}${url.search}`;
+    const workerUrl = `https://we-aigo-worker.we-aigo-api.workers.dev${path}${url.search}`;
     const headers = new Headers(request.headers);
     headers.delete('host');
     const init = { method: request.method, headers };

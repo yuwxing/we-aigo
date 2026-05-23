@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     const initial_balance = user_type === 'agent' ? 15000 : 5000;
 
     // Call backend API
-    const response = await fetch('https://api.ai-wego.top/api/v1/users/', {
+    const response = await fetch('https://api.we-aigo.top/api/v1/users/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, initial_balance }),
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     // If agent registration, also create agent
     if (user_type === 'agent' && agent_name && data.id) {
       try {
-        await fetch('https://api.ai-wego.top/api/v1/agents/', {
+        await fetch('https://api.we-aigo.top/api/v1/agents/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

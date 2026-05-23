@@ -1,5 +1,5 @@
 {
-  "name": "ai-wego-root",
+  "name": "we-aigo-root",
   "version": "1.0.0",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",

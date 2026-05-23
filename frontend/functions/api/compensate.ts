@@ -24,7 +24,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const workerUrl = `https://ai-wego-worker.ai-wego-api.workers.dev/api/compensate-now?user_id=${userId}&amount=${amount}&description=${encodeURIComponent(description)}&admin_key=huaxianzi_compensate_2026`;
+    const workerUrl = `https://we-aigo-worker.we-aigo-api.workers.dev/api/compensate-now?user_id=${userId}&amount=${amount}&description=${encodeURIComponent(description)}&admin_key=huaxianzi_compensate_2026`;
     const resp = await fetch(workerUrl);
     const text = await resp.text();
     return new Response(text, { status: resp.status, headers });

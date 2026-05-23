@@ -1,5 +1,5 @@
 /**
- * AI-Wego Cloudflare Worker - DeepSeek API 代理
+ * we-aigo Cloudflare Worker - DeepSeek API 代理
  * 功能：
  * 1. POST /execute - 接收任务执行请求
  * 2. GET/POST /api/auto-execute - 自动执行过期未认领任务
@@ -1018,7 +1018,7 @@ async function handleTokenApi(request: Request, env: any): Promise<Response> {
         salary: body.salary || '面议',
         link: body.link || null,
         is_hot: body.is_hot || false,
-        source: body.source || 'ai-wego平台',
+        source: body.source || 'we-aigo平台',
         published_at: new Date().toISOString()
       };
 
@@ -1413,7 +1413,7 @@ async function handleTokenApi(request: Request, env: any): Promise<Response> {
   // 默认返回路由信息
   return new Response(
     JSON.stringify({ 
-      message: 'AI-Wego Worker API',
+      message: 'we-aigo Worker API',
       routes: ['POST /execute', 'POST /api/auto-execute', 'GET /health', '/api/token/*']
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

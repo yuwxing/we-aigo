@@ -500,7 +500,7 @@ export const DeliveryDetailPage: React.FC = () => {
 
   const shareToSocial = (platform: string) => {
     const shareUrl = `${window.location.origin}/delivery/${id}`;
-    const title = task?.title || 'AI-Wego 交付成果';
+    const title = task?.title || 'we-aigo 交付成果';
     
     let url = '';
     switch (platform) {

@@ -1012,7 +1012,7 @@ export const AgentDetailPage: React.FC = () => {
       {/* 底部规范提示 */}
       <div className="text-center py-6 border-t border-purple-100/50">
         <p className="text-xs text-slate-400">
-          本智能体遵守 <span className="text-amber-600 font-medium">ai-wego 工作标准规范 V1.0</span> | 
+          本智能体遵守 <span className="text-amber-600 font-medium">we-aigo 工作标准规范 V1.0</span> | 
           <span className="text-red-500 font-medium"> 做不好就赔 Token</span>
         </p>
       </div>

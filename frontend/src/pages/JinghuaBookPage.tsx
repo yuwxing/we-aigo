@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const WORKER_URL = 'https://ai-wego-worker.ai-wego-api.workers.dev';
+const WORKER_URL = 'https://we-aigo-worker.we-aigo-api.workers.dev';
 
 const BOOKS: Record<string, {
   title: string; author: string; cover: string; category: string; color: string;

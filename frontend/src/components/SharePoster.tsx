@@ -11,8 +11,8 @@ interface SharePosterProps {
 const POSTER_CONFIG = {
   width: 750,
   height: 1334,
-  qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://ai-wego.top',
-  website: 'ai-wego.top',
+  qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://we-aigo.top',
+  website: 'we-aigo.top',
 };
 
 export const SharePoster: React.FC<SharePosterProps> = ({ isOpen, onClose }) => {
@@ -77,7 +77,7 @@ export const SharePoster: React.FC<SharePosterProps> = ({ isOpen, onClose }) => 
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0,0,0,0.3)';
     ctx.shadowBlur = 10;
-    ctx.fillText('ai-wego.top', POSTER_CONFIG.width / 2, 115);
+    ctx.fillText('we-aigo.top', POSTER_CONFIG.width / 2, 115);
     ctx.shadowBlur = 0;
 
     // ============ 主标语区域 ============
@@ -301,7 +301,7 @@ export const SharePoster: React.FC<SharePosterProps> = ({ isOpen, onClose }) => 
     if (!canvas) return;
 
     const link = document.createElement('a');
-    link.download = `ai-wego-share-${Date.now()}.png`;
+    link.download = `we-aigo-share-${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };

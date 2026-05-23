@@ -1,5 +1,5 @@
-import { onRequestOptions as __api_chat_ts_onRequestOptions } from "/app/data/所有对话/主对话/ai-wego/frontend/functions/api/chat.ts"
-import { onRequestPost as __api_chat_ts_onRequestPost } from "/app/data/所有对话/主对话/ai-wego/frontend/functions/api/chat.ts"
+import { onRequestOptions as __api_chat_ts_onRequestOptions } from "/app/data/所有对话/主对话/we-aigo/frontend/functions/api/chat.ts"
+import { onRequestPost as __api_chat_ts_onRequestPost } from "/app/data/所有对话/主对话/we-aigo/frontend/functions/api/chat.ts"
 
 export const routes = [
     {

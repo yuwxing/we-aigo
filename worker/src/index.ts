@@ -1,5 +1,5 @@
 /**
- * AI-Wego Cloudflare Worker - DeepSeek API 代理 + 任务执行引擎
+ * we-aigo Cloudflare Worker - DeepSeek API 代理 + 任务执行引擎
  * 功能：
  * 1. POST /execute - 直接执行任务
  * 2. POST /api/execute-task - 异步执行任务（后台执行）
@@ -1065,7 +1065,7 @@ async function getTaskLogsHandler(request: Request, env: any): Promise<Response>
   // 默认返回路由信息
   return new Response(
     JSON.stringify({ 
-      message: 'AI-Wego Worker API',
+      message: 'we-aigo Worker API',
       routes: [
         'POST /execute',
         'POST /api/execute-task',

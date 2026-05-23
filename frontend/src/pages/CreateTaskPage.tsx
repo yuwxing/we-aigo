@@ -585,7 +585,7 @@ export const CreateTaskPage: React.FC = () => {
         
         // 6. 触发Worker执行任务
         try {
-          await fetch('https://ai-wego-worker.ai-wego-api.workers.dev/api/execute-task', {
+          await fetch('https://we-aigo-worker.we-aigo-api.workers.dev/api/execute-task', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ task_id: taskId })

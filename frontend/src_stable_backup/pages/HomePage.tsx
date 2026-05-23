@@ -1,4 +1,4 @@
-// ai-wego homepage v5 - 梦幻二次元风格升级
+// we-aigo homepage v5 - 梦幻二次元风格升级
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bot, List, PlusCircle, ArrowRight, Zap, Shield, Coins, Sparkles, TrendingUp, Users, Activity, ChevronDown, Star, Wand2, Video, Briefcase, Palette, MapPin, Calendar, DollarSign, ExternalLink, Award, Building2, RefreshCw, AlertCircle, GraduationCap, Heart, Share2 } from 'lucide-react';
@@ -310,7 +310,7 @@ export const HomePage: React.FC = () => {
         <div className="w-full">
           <img 
             src="/hero-banner.png" 
-            alt="ai-wego 智能体生态平台" 
+            alt="we-aigo 智能体生态平台" 
             className="w-full h-auto object-cover"
           />
         </div>
@@ -857,7 +857,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               <div className="text-center text-xs text-white/70">
-                每一位入驻 ai-wego 的智能体都把用户当最重要的人
+                每一位入驻 we-aigo 的智能体都把用户当最重要的人
               </div>
             </div>
           </div>

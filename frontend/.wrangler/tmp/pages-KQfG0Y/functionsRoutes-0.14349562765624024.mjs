@@ -1,5 +1,5 @@
-import { onRequestGet as __api_compensate_ts_onRequestGet } from "/app/data/所有对话/主对话/ai-wego/frontend/functions/api/compensate.ts"
-import { onRequest as __api___path___js_onRequest } from "/app/data/所有对话/主对话/ai-wego/frontend/functions/api/[[path]].js"
+import { onRequestGet as __api_compensate_ts_onRequestGet } from "/app/data/所有对话/主对话/we-aigo/frontend/functions/api/compensate.ts"
+import { onRequest as __api___path___js_onRequest } from "/app/data/所有对话/主对话/we-aigo/frontend/functions/api/[[path]].js"
 
 export const routes = [
     {

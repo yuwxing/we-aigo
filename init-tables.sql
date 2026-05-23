@@ -1,4 +1,4 @@
--- AI-Wego 省省钱币激励系统 - 数据库初始化SQL
+-- we-aigo 省省钱币激励系统 - 数据库初始化SQL
 -- 请在Supabase后台 (https://supabase.com/dashboard) 的SQL Editor中执行
 
 -- 1. 创建省钱币交易记录表

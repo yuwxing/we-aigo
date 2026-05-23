@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       const offset = parseInt(req.query.skip || '0');
       
       const response = await fetch(
-        `https://api.ai-wego.top/api/v1/tasks/?limit=${limit}&skip=${offset}`,
+        `https://api.we-aigo.top/api/v1/tasks/?limit=${limit}&skip=${offset}`,
         { headers: { 'Content-Type': 'application/json' } }
       );
       
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const response = await fetch('https://api.ai-wego.top/api/v1/tasks/', {
+      const response = await fetch('https://api.we-aigo.top/api/v1/tasks/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req.body),

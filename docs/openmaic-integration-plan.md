@@ -1,4 +1,4 @@
-# OpenMAIC 集成到 ai-wego 平台方案
+# OpenMAIC 集成到 we-aigo 平台方案
 
 **文档版本**: v1.0  
 **创建日期**: 2026-04-28  
@@ -23,7 +23,7 @@
 ## 执行总结
 
 ### 项目目标
-将清华大学开源的 **OpenMAIC**（多智能体互动课堂平台）集成到 ai-wego 平台，打造"求职课堂"场景，提供 AI 驱动的沉浸式求职培训体验。
+将清华大学开源的 **OpenMAIC**（多智能体互动课堂平台）集成到 we-aigo 平台，打造"求职课堂"场景，提供 AI 驱动的沉浸式求职培训体验。
 
 ### 核心价值
 | 维度 | 价值 |
@@ -33,7 +33,7 @@
 | **技术优势** | 复用成熟开源框架，降低开发成本 70%+ |
 
 ### 推荐方案
-**方案 A（快速上线）**：OpenMAIC 部署到 Vercel，通过 iframe 嵌入 ai-wego
+**方案 A（快速上线）**：OpenMAIC 部署到 Vercel，通过 iframe 嵌入 we-aigo
 
 ---
 
@@ -217,9 +217,9 @@ ACCESS_CODE=your-secret-code
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        ai-wego 平台                              │
+│                        we-aigo 平台                              │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │  求职课堂页面 (ai-wego.com/job-classroom)               │   │
+│  │  求职课堂页面 (we-aigo.com/job-classroom)               │   │
 │  │  ┌─────────────────────────────────────────────────────┐ │   │
 │  │  │  页面组件                                           │ │   │
 │  │  │  - 岗位选择器                                       │ │   │
@@ -254,7 +254,7 @@ ACCESS_CODE=your-secret-code
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   用户行为   │────▶│  ai-wego 前端 │────▶│ OpenMAIC     │
+│   用户行为   │────▶│  we-aigo 前端 │────▶│ OpenMAIC     │
 │              │     │  (React)     │     │ (iframe)     │
 └──────────────┘     └──────────────┘     └──────────────┘
                             │                    │
@@ -277,7 +277,7 @@ ACCESS_CODE=your-secret-code
 ### 通信协议（postMessage）
 
 ```typescript
-// ai-wego -> OpenMAIC
+// we-aigo -> OpenMAIC
 interface WegoToOpenmaicMessage {
   type: 'SET_RESUME' | 'SET_POSITION' | 'START_INTERVIEW' | 'END_INTERVIEW';
   payload: {
@@ -287,7 +287,7 @@ interface WegoToOpenmaicMessage {
   };
 }
 
-// OpenMAIC -> ai-wego
+// OpenMAIC -> we-aigo
 interface OpenmaicToWegoMessage {
   type: 'INTERVIEW_COMPLETE' | 'INTERVIEW_FEEDBACK' | 'RESUME_ANALYSIS';
   payload: {
@@ -586,7 +586,7 @@ TTS_MINIMAX_API_KEY=xxxxxxxxxxxxxxxx
 |------|------|--------|
 | 1-2 | 部署 OpenMAIC 到 Vercel | 线上访问地址 |
 | 3-4 | 配置 3 个求职智能体 | 面试官、简历师、导师 |
-| 5-6 | 开发 ai-wego 嵌入页面 | 页面代码 |
+| 5-6 | 开发 we-aigo 嵌入页面 | 页面代码 |
 | 7-8 | iframe 通信实现 | postMessage 交互 |
 | 9-10 | 基础面试流程测试 | 功能演示 |
 | 11-12 | 面试反馈功能开发 | 报告生成 |
@@ -655,7 +655,7 @@ TTS_MINIMAX_API_KEY=xxxxxxxxxxxxxxxx
 ```markdown
 1. 安装 OpenClaw: clawhub install openmaic
 2. 在飞书机器人中调用
-3. 通过 claw-web 嵌入到 ai-wego
+3. 通过 claw-web 嵌入到 we-aigo
 ```
 
 #### 备选 2：自托管部署
@@ -678,7 +678,7 @@ services:
 
 - 轻量功能：OpenMAIC iframe
 - 深度定制：自研智能体对话系统
-- 数据存储：ai-wego 后端
+- 数据存储：we-aigo 后端
 
 ---
 

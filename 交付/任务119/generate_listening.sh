@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /app/data/所有对话/主对话/ai-wego/交付/任务119
+cd /app/data/所有对话/主对话/we-aigo/交付/任务119
 python .skills/skill_create-ppt/scripts/generate_batch.py << 'EOF'
 {
   "ppt_title": "Unit5_听说课件",

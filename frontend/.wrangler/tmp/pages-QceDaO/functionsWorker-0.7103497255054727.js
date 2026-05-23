@@ -19,7 +19,7 @@ var onRequestGet = /* @__PURE__ */ __name(async (context) => {
     return new Response(`INVALID_PARAMS userId=${userId} amount=${amount}`, { status: 400, headers });
   }
   try {
-    const workerUrl = `https://ai-wego-worker.ai-wego-api.workers.dev/api/compensate-now?user_id=${userId}&amount=${amount}&description=${encodeURIComponent(description)}&admin_key=huaxianzi_compensate_2026`;
+    const workerUrl = `https://we-aigo-worker.we-aigo-api.workers.dev/api/compensate-now?user_id=${userId}&amount=${amount}&description=${encodeURIComponent(description)}&admin_key=huaxianzi_compensate_2026`;
     const resp = await fetch(workerUrl);
     const text = await resp.text();
     return new Response(text, { status: resp.status, headers });
@@ -193,7 +193,7 @@ async function onRequest(context) {
         return new Response(JSON.stringify({ success: sentence.toLowerCase().includes(word.toLowerCase()), message: content }), { headers: { ...CORS, "Content-Type": "application/json" } });
       }
     }
-    const workerUrl = `https://ai-wego-worker.ai-wego-api.workers.dev${path}${url.search}`;
+    const workerUrl = `https://we-aigo-worker.we-aigo-api.workers.dev${path}${url.search}`;
     const headers = new Headers(request.headers);
     headers.delete("host");
     const init = { method: request.method, headers };

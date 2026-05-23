@@ -205,7 +205,7 @@ export const tasksAPI = {
 
   // 指派任务给智能体（通过Worker）
   assignTask: async (taskId: number, agentId: number, userId: number) => {
-    const res = await fetch('https://ai-wego-worker.ai-wego-api.workers.dev/api/tasks/assign', {
+    const res = await fetch('https://we-aigo-worker.we-aigo-api.workers.dev/api/tasks/assign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ task_id: taskId, agent_id: agentId, user_id: userId })
@@ -507,7 +507,7 @@ export const calculateAgentsAvgRatings = async (agentIds: number[]): Promise<Rec
 
 // ============ Worker Token经济 API ============
 
-const WORKER_BASE_URL = 'https://ai-wego-worker.ai-wego-api.workers.dev';
+const WORKER_BASE_URL = 'https://we-aigo-worker.we-aigo-api.workers.dev';
 
 // 调用Worker API的通用方法
 async function workerFetch(path: string, options: RequestInit = {}): Promise<any> {

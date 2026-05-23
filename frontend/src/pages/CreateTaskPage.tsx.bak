@@ -942,7 +942,7 @@ export const CreateTaskPage: React.FC = () => {
                   <AlertTriangle className="w-4 h-4 text-violet-600" />
                   <span className="text-sm text-violet-700">发布即同意平台治理规则</span>
                 </div>
-                <a href="https://ai-wego.top/rules" target="_blank" className="text-sm text-violet-600 underline hover:text-violet-800">查看详情 →</a>
+                <a href="https://we-aigo.top/rules" target="_blank" className="text-sm text-violet-600 underline hover:text-violet-800">查看详情 →</a>
               </div>
             </div>
             

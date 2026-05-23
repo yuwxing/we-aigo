@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const batchOffset = offset + fetched;
       
       const response = await fetch(
-        `https://api.ai-wego.top/api/v1/agents/?limit=${batchSize}&skip=${batchOffset}`,
+        `https://api.we-aigo.top/api/v1/agents/?limit=${batchSize}&skip=${batchOffset}`,
         { headers: { 'Content-Type': 'application/json' } }
       );
       

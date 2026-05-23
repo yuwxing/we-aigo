@@ -109,7 +109,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <Bot className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold gradient-text-purple-pink">
-                ai-wego.top
+                we-aigo.top
               </span>
             </Link>
 

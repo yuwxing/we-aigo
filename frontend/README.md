@@ -1,1 +1,1 @@
-# AI-Wego Frontend
+# we-aigo Frontend

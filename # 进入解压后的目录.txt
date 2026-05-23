@@ -1,5 +1,5 @@
 # 进入解压后的目录
-cd ai-wego-core
+cd we-aigo-core
 
 # 初始化
 git init
@@ -8,7 +8,7 @@ git init
 git add .
 
 # 提交
-git commit -m "Initial commit: ai-wego-core platform source code"
+git commit -m "Initial commit: we-aigo-core platform source code"
 
 # 添加远程仓库
 git remote add origin https://github.com/yuwxing/we-aigo.git

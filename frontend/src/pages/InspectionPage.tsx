@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Card } from '../components/ui';
 
-const WORKER_URL = 'https://ai-wego-worker.pages.dev';
+const WORKER_URL = 'https://we-aigo-worker.pages.dev';
 
 interface CheckItem {
   name: string;

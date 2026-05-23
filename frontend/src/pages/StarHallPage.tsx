@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI-Wego 数字校园</title>
+<title>we-aigo 数字校园</title>
 <style>
 *{
 margin:0;
@@ -368,7 +368,7 @@ flex-direction:column;
 <div class="entrance" id="entrance">
 <h1>✨ 星云大厅</h1>
 <p class="subtitle">
-你正在进入 AI-Wego 数字校园的入口空间<br>
+你正在进入 we-aigo 数字校园的入口空间<br>
 在这里，遇见你的AI伙伴，开启共同成长之旅
 </p>
 
@@ -399,7 +399,7 @@ flex-direction:column;
 </div>
 
 <div class="hero">
-<h2>欢迎来到 AI-Wego 数字校园</h2>
+<h2>欢迎来到 we-aigo 数字校园</h2>
 <p id="welcomeMsg">人与智能体共同成长的未来校园</p>
 </div>
 
