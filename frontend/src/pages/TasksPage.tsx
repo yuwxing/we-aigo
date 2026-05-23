@@ -30,11 +30,10 @@ export default function TasksPage() {
     },
     {
       id: 3,
-      title: "听力挑战任务",
+      title: "听说挑战任务",
       type: "DAILY QUEST",
-      zone: "🔵 听力站",
-      xp: 40,
-      description: "训练英语听力理解",
+      zone: "🔵 听说站",
+      description: "训练英语听说能力",
     },
     {
       id: 4,
@@ -65,7 +64,7 @@ export default function TasksPage() {
           <div style={styles.block}>🪐 世界地图</div>
           <div>🔴 英语核心区</div>
           <div>🟠 语法实验室</div>
-          <div>🔵 听力站</div>
+          <div>🔵 听说站</div>
           <div>🟢 写作舱</div>
         </div>
 
