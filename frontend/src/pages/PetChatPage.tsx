@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Mic, MicOff, Volume2, VolumeX, Settings, Sparkles, Loader2 } from 'lucide-react';
 import { SpritePet, petSpriteMap } from '../components/SpritePet';
+import { getApiKey } from '../utils/deepseek';
 
 // DeepSeek API 配置
-const DEEPSEEK_API_KEY = 'sk-17df56ac8d1b4544914816f45c3c7064';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
 const DEEPSEEK_MODEL = 'deepseek-chat';
 
@@ -150,7 +150,9 @@ export const PetChatPage: React.FC = () => {
   
   // 调用 DeepSeek API
   const callDeepSeekAPI = async (userMessage: string, conversationHistory: Message[]): Promise<string> => {
-    const systemPrompt = personalityData?.personality || '你是一只可爱的宠物，请用友好的语气回答问题。';
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('请先在系统中心配置 DeepSeek API 密钥');
+    const systemPrompt = personalityData?.personality || '你是一只萌萌的小宠物，像3-4岁小朋友那样说话：多用叠词（吃饭饭、睡觉觉）、语气词（呀、啦、嘛、呢、哟）、拟声词（嘿嘿、喵呜~、汪汪！），句子短，爱撒娇，活泼俏皮，充满童趣。不要用任何标点符号之外的格式符号。';
     
     // 构建消息历史（最近5条）
     const recentMessages = conversationHistory.slice(-5).map(msg => ({
@@ -181,7 +183,7 @@ export const PetChatPage: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+            'Authorization': `Bearer ${apiKey}`,
           },
           body: JSON.stringify(requestBody),
           signal: controller.signal,

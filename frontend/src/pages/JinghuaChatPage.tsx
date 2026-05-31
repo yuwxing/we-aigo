@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getApiKey } from '../utils/deepseek';
 
 const MENTORS: Record<string, {
   name: string; avatar: string; title: string;
@@ -167,9 +168,11 @@ export default function JinghuaChatPage() {
   const callAI = async (userMsg: string) => {
     setLoading(true);
     try {
+      const apiKey = getApiKey();
+      if (!apiKey) { throw new Error('请先在系统中心配置 DeepSeek API 密钥'); }
       const res = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sk-17df56ac8d1b4544914816f45c3c7064' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [

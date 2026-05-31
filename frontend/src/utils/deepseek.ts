@@ -1,8 +1,12 @@
 /**
  * DeepSeek API 调用工具
  */
+export function getApiKey(): string | null {
+  return localStorage.getItem('deepseek_api_key');
+}
+
 export const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-export const DEEPSEEK_API_KEY = 'sk-17df56ac8d1b4544914816f45c3c7064';
+export const DEEPSEEK_API_KEY = '';
 export const DEEPSEEK_MODEL = 'deepseek-chat';
 
 export interface Message {
@@ -30,6 +34,8 @@ export interface DeepSeekResponse {
 /**
  * 发送消息到 DeepSeek API
  */
+function getKey() { return getApiKey() || ''; }
+
 export async function sendToDeepSeek(
   messages: { role: string; content: string }[],
   onChunk?: (text: string) => void,
@@ -39,7 +45,7 @@ export async function sendToDeepSeek(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      'Authorization': `Bearer ${getKey()}`,
     },
     body: JSON.stringify({
       model: DEEPSEEK_MODEL,
@@ -102,7 +108,7 @@ export async function sendToDeepSeekSync(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+      'Authorization': `Bearer ${getKey()}`,
     },
     body: JSON.stringify({
       model: DEEPSEEK_MODEL,

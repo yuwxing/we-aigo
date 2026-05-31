@@ -161,9 +161,11 @@ export async function onRequest(context) {
       const { word, sentence } = body;
       if (!word || !sentence) return new Response(JSON.stringify({ error: '缺少参数' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
       
+      const deepseekKey = context?.env?.DEEPSEEK_API_KEY || globalThis?.DEEPSEEK_API_KEY || '';
+      if (!deepseekKey) return new Response(JSON.stringify({ error: 'DeepSeek API key not configured' }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
       const aiResp = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sk-17df56ac8d1b4544914816f45c3c7064' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${deepseekKey}` },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [{ role: 'system', content: '你是英语老师。评判学生用指定单词造的句子是否正确。返回JSON: {"success":true/false,"message":"评价"}' }, { role: 'user', content: `单词: ${word}\n句子: ${sentence}` }],
