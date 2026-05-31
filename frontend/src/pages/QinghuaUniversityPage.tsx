@@ -252,6 +252,7 @@ const LIBRARY_BOOKS: Record<string, Array<{title: string; author: string; summar
 
 // ============ DeepSeek API ============
 const DEEPSEEK_CONFIG = {
+  apiKey: '',
   baseUrl: 'https://api.deepseek.com',
   model: 'deepseek-chat'
 };

@@ -6,6 +6,7 @@ import { SpritePet, petSpriteMap } from '../components/SpritePet';
 import { getApiKey } from '../utils/deepseek';
 
 // DeepSeek API 配置
+const DEEPSEEK_API_KEY = '';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
 const DEEPSEEK_MODEL = 'deepseek-chat';
 

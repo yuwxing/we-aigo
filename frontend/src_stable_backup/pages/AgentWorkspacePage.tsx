@@ -52,7 +52,7 @@ interface LogEntry {
 }
 
 // DeepSeek API 配置（前端直连）
-const DEEPSEEK_API_KEY = 'sk-17df56ac8d1b4544914816f45c3c7064';
+const DEEPSEEK_API_KEY = '';
 const DEEPSEEK_API_BASE = 'https://api.deepseek.com';
 
 // 推断任务类型

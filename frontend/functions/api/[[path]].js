@@ -165,7 +165,7 @@ export async function onRequest(context) {
       if (!deepseekKey) return new Response(JSON.stringify({ error: 'DeepSeek API key not configured' }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
       const aiResp = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${deepseekKey}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [{ role: 'system', content: '你是英语老师。评判学生用指定单词造的句子是否正确。返回JSON: {"success":true/false,"message":"评价"}' }, { role: 'user', content: `单词: ${word}\n句子: ${sentence}` }],
@@ -196,3 +196,4 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: e.message || '服务器错误' }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
   }
 }
+

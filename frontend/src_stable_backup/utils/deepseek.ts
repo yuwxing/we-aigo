@@ -2,7 +2,7 @@
  * DeepSeek API 调用工具
  */
 export const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-export const DEEPSEEK_API_KEY = 'sk-17df56ac8d1b4544914816f45c3c7064';
+export const DEEPSEEK_API_KEY = '';
 export const DEEPSEEK_MODEL = 'deepseek-chat';
 
 export interface Message {

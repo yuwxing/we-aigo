@@ -172,7 +172,7 @@ export default function JinghuaChatPage() {
       if (!apiKey) { throw new Error('请先在系统中心配置 DeepSeek API 密钥'); }
       const res = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [

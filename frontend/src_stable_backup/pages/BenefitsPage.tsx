@@ -74,7 +74,7 @@ const callDeepSeekAPI = async (userInput: string, retries = 2): Promise<string> 
       const timeoutId = setTimeout(() => controller.abort(), 60000);
       const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sk-17df56ac8d1b4544914816f45c3c7064' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [
