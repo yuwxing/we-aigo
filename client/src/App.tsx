@@ -69,8 +69,6 @@ export default function App() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [newsLoading, setNewsLoading] = useState(false)
   const [newsFilter, setNewsFilter] = useState('all')
-  const [showMobilePanel, setShowMobilePanel] = useState(false)
-  const closeMobilePanel = () => setShowMobilePanel(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Dream[] | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
@@ -207,10 +205,10 @@ export default function App() {
         {/* Tabs + Content */}
         <div ref={dreamsRef} className="relative" style={{ zIndex: 1 }}>
           <nav className="flex items-center justify-center gap-2 px-4 mb-6">
-            <div className="glass rounded-2xl p-1 inline-flex">
+            <div className="glass rounded-2xl p-1 inline-flex flex-wrap justify-center">
               {tabs.map(t => (
                 <button key={t.key} onClick={() => setSection(t.key)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all duration-200 ${
                     section === t.key ? 'bg-purple-500/20 text-purple-300 shadow-sm' : 'text-gray-400 hover:text-gray-200'
                   }`}
                 ><span className="mr-1">{t.icon}</span>{t.label}</button>
@@ -300,125 +298,12 @@ export default function App() {
         </div>
       </div>
 
-      {/* Mobile FAB */}
-      <button onClick={() => setShowMobilePanel(true)}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg shadow-purple-500/30 flex items-center justify-center text-white text-2xl z-50 active:scale-90 transition-transform"
-      >✨</button>
 
-      {/* Mobile bottom sheet */}
-      {showMobilePanel && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={closeMobilePanel}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div onClick={e => e.stopPropagation()}
-            className="absolute bottom-0 left-0 right-0 max-h-[85vh] rounded-t-3xl glass overflow-y-auto"
-          >
-            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />
-            <div className="px-4 pb-6 pt-2">
-              {/* Mobile Stats */}
-              <div className="glass rounded-2xl p-3 mb-3">
-                <div className="grid grid-cols-2 gap-3">
-                  {counters.map((item, i) => (
-                    <div key={i} className="text-center">
-                      <div className="text-lg font-black glow-text">{item.value.toLocaleString()}</div>
-                      <div className="text-[10px] text-gray-400 mt-0.5">{item.suffix}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Mobile Mars removed */}
-              {/* Mobile Brain Chip removed */}
-              {/* Mobile AI bar */}
-              <div className="glass rounded-2xl px-4 py-2 flex items-center justify-between mb-3">
-                <span className="text-xs text-gray-400">🧠 {mood}</span>
-                <span className="text-[10px] text-gray-500">📌 WE-AIGO <span className="text-[#6bd6ff]">45%</span></span>
-              </div>
-              {/* Mobile search */}
-              <input type="text" value={searchQuery} onChange={e => handleSearch(e.target.value)}
-                placeholder="🔍 搜索梦想..."
-                className="w-full glass rounded-xl px-3 py-2 text-xs text-gray-200 outline-none glow-border placeholder:text-gray-600 mb-3"
-              />
-              {/* Mobile Tabs */}
-              <div className="grid grid-cols-5 gap-1 mb-3">
-                {tabs.map(t => (
-                  <button key={t.key} onClick={() => { setSection(t.key); setShowMobilePanel(false) }}
-                    className={`py-2 rounded-lg text-[10px] font-medium transition-all ${
-                      section === t.key ? 'bg-purple-500/20 text-purple-300' : 'text-gray-400'
-                    }`}
-                  >{t.icon}<br/>{t.label}</button>
-                ))}
-              </div>
-            </div>
-            {/* Mobile content area */}
-            <div className="px-4 pb-8">
-              {isWorldSection ? (
-                <div className="space-y-2">
-                  <div className="flex gap-2 mb-3">
-                    {newsCats.map(c => (
-                      <button key={c.key} onClick={() => setNewsFilter(c.key)}
-                        className={`px-2 py-1 rounded-full text-[10px] font-medium ${
-                          newsFilter === c.key ? 'bg-violet-500/20 text-violet-300' : 'bg-white/5 text-gray-400'
-                        }`}
-                      >{c.label}</button>
-                    ))}
-                  </div>
-                  {newsLoading ? (
-                    <div className="flex justify-center py-8">
-                      <svg className="animate-spin h-6 w-6 text-purple-400" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {(newsFilter === 'all' ? news : news.filter(n => n.category === newsFilter)).map((item, i) => (
-                        <div key={i} className="glass rounded-xl p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
-                            <span className="text-[10px] text-gray-500">{item.time}</span>
-                          </div>
-                          <p className="text-xs leading-relaxed opacity-80">{item.title}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : searchQuery.trim() && searchResults !== null ? (
-                searchResults.length === 0 ? (
-                  <div className="text-center py-8"><p className="text-gray-500 text-xs">没有找到匹配的梦想</p></div>
-                ) : (
-                  <div>
-                    <p className="text-[10px] text-gray-500 mb-2">找到 {searchResults.length} 个结果</p>
-                    <div className="space-y-3">
-                      {searchResults.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
-                    </div>
-                  </div>
-                )
-              ) : loading ? (
-                <div className="flex justify-center py-8">
-                  <svg className="animate-spin h-6 w-6 text-purple-400" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                </div>
-              ) : error ? (
-                <p className="text-center text-red-400 py-8 text-xs">{error}</p>
-              ) : section === 'favorites' && dreams.length === 0 ? (
-                <div className="text-center py-8"><p className="text-gray-500 text-xs">还没有收藏的梦想</p></div>
-              ) : dreams.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-2xl mb-2">✨</p>
-                  <p className="text-gray-500 text-xs">还没有梦想</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {dreams.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
+
+
+
+      {/* Footer — visible on all screens */}
       <footer className="relative text-center pb-12 px-4" style={{ zIndex: 1 }}>
         <button onClick={() => setShowAbout(!showAbout)} className="text-sm text-gray-500 hover:text-gray-300 transition">
           {showAbout ? '收起 ▲' : '关于 WE-AIGO ▼'}
@@ -429,9 +314,13 @@ export default function App() {
           </div>
         )}
       </footer>
-    </div>
+        </div>
   )
 }
+
+
+
+
 
 
 

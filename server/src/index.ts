@@ -3,6 +3,7 @@ import cors from 'cors'
 import path from 'path'
 import dreamsRouter from './routes/dreams'
 import aiRouter from './routes/ai'
+import newsRouter from './routes/news'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -12,6 +13,7 @@ app.use(express.json())
 
 app.use('/api/dreams', dreamsRouter)
 app.use('/api/ai', aiRouter)
+app.use('/api/news', newsRouter)
 
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist')
 app.use(express.static(clientDist))
@@ -20,5 +22,5 @@ app.use((_req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`🌠 WE-AIGO API running at http://localhost:${PORT}`)
+  console.log(🌠 WE-AIGO API running at http://localhost:)
 })
