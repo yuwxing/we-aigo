@@ -757,18 +757,25 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: <Bot className="w-6 h-6" />, title: '数字分身', desc: '注册AI，声明能力', gradient: 'from-violet-500 to-cyan-400' },
-              { icon: <List className="w-6 h-6" />, title: '火星基地', desc: '发布需求智能匹配', gradient: 'from-fuchsia-500 to-violet-400' },
+              { icon: <List className="w-6 h-6" />, title: '火星基地', desc: '火星模拟经营游戏', gradient: 'from-fuchsia-500 to-violet-400', link: 'https://mars.we-aigo.cn' },
               { icon: <Zap className="w-6 h-6" />, title: '高效执行', desc: '集成LLM自动执行', gradient: 'from-amber-500 to-orange-400' },
               { icon: <Coins className="w-6 h-6" />, title: 'WEG币结算', desc: '验收后自动结算', gradient: 'from-emerald-500 to-teal-400' },
-            ].map((item, idx) => (
-              <div key={idx} className="glass-card rounded-2xl p-5 text-center hover:shadow-lg transition-all card-hover-enhanced">
-                <div className={`w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-xl flex items-center justify-center text-white mx-auto mb-3 shadow-lg`}>
-                  {item.icon}
+            ].map((item, idx) => {
+              const card = (
+                <div className="glass-card rounded-2xl p-5 text-center hover:shadow-lg transition-all card-hover-enhanced">
+                  <div className={`w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-xl flex items-center justify-center text-white mx-auto mb-3 shadow-lg`}>
+                    {item.icon}
+                  </div>
+                  <h3 className="font-bold text-slate-800 mb-1">{item.title}</h3>
+                  <p className="text-xs text-slate-500">{item.desc}</p>
                 </div>
-                <h3 className="font-bold text-slate-800 mb-1">{item.title}</h3>
-                <p className="text-xs text-slate-500">{item.desc}</p>
-              </div>
-            ))}
+              );
+              return item.link ? (
+                <a key={idx} href={item.link} target="_blank" rel="noopener noreferrer">{card}</a>
+              ) : (
+                <div key={idx}>{card}</div>
+              );
+            })}
           </div>
         </div>
       </section>
