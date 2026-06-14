@@ -109,9 +109,19 @@ export async function toggleFavorite(dreamId: number): Promise<{ favorited: bool
 }
 
 export async function checkFavorite(dreamId: number): Promise<{ favorited: boolean }> {
-  const res = await fetch(`${BASE}/${dreamId}/favorite/check`, {
+  const res = await fetch(`${BASE}/${dreamId}/favorite`, {
     headers: headers(),
   })
+  return res.json()
+}
+
+export async function fetchFavorites(): Promise<Dream[]> {
+  const res = await fetch(`${BASE}/favorites`, { headers: headers() })
+  return res.json()
+}
+
+export async function searchDreams(q: string): Promise<Dream[]> {
+  const res = await fetch(`${BASE}/search?q=${encodeURIComponent(q)}`)
   return res.json()
 }
 

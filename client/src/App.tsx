@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, type Dream, type NewsItem } from './api'
+import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, fetchFavorites, searchDreams, type Dream, type NewsItem } from './api'
 import DreamCard from './components/DreamCard'
 import DreamForm from './components/DreamForm'
 import Universe from './components/Universe'
 
-type Section = 'hot' | 'latest' | 'random' | 'world'
+type Section = 'hot' | 'latest' | 'random' | 'world' | 'favorites'
 
 const moods = ['稳定 🙂', '偏兴奋 🚀', '专注 🧠', '灵感爆发 ⚡']
 const reminders = ['整理想法', '探索未知领域', '关注 AI 前沿', '给梦想加点细节', '看看别人在创造什么']
@@ -20,6 +20,7 @@ const tabs: { key: Section; label: string; icon: string }[] = [
   { key: 'hot', label: '热门梦想', icon: '🔥' },
   { key: 'latest', label: '最新梦想', icon: '🆕' },
   { key: 'random', label: '随机梦想', icon: '🌎' },
+  { key: 'favorites', label: '我的收藏', icon: '⭐' },
   { key: 'world', label: '世界动态', icon: '🌍' },
 ]
 
@@ -68,6 +69,10 @@ export default function App() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [newsLoading, setNewsLoading] = useState(false)
   const [newsFilter, setNewsFilter] = useState('all')
+  const [showMobilePanel, setShowMobilePanel] = useState(false)
+  const closeMobilePanel = () => setShowMobilePanel(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Dream[] | null>(null)
   const universeRef = useRef<{ addStar: (dreamId: number) => void }>(null)
   const dreamsRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -76,6 +81,8 @@ export default function App() {
 
   useEffect(() => {
     if (isWorldSection) { fetchNewsData(); return }
+    if (section === 'favorites') { loadFavorites(); return }
+    setSearchResults(null)
     loadDreams(section)
   }, [section])
 
@@ -83,6 +90,20 @@ export default function App() {
     setNewsLoading(true)
     try { setNews(await fetchNews()) } catch { setNews([]) }
     finally { setNewsLoading(false) }
+  }
+
+  const loadFavorites = async () => {
+    setLoading(true)
+    try { setDreams(await fetchFavorites()) } catch {}
+    finally { setLoading(false) }
+  }
+
+  const handleSearch = async (q: string) => {
+    setSearchQuery(q)
+    if (!q.trim()) { setSearchResults(null); return }
+    setLoading(true)
+    try { setSearchResults(await searchDreams(q.trim())) } catch { setSearchResults([]) }
+    finally { setLoading(false) }
   }
 
   // Rotate mood
@@ -150,97 +171,243 @@ export default function App() {
         </div>
       </section>
 
-      {/* Stats */}
-      <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
-        <div className="max-w-3xl mx-auto glass rounded-2xl p-4 md:p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {counters.map((item, i) => <AnimatedCounter key={i} value={item.value} suffix={item.suffix} />)}
+      {/* Desktop: visible md+, hidden on mobile */}
+      <div className="hidden md:block">
+        {/* Stats */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto glass rounded-2xl p-4 md:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {counters.map((item, i) => <AnimatedCounter key={i} value={item.value} suffix={item.suffix} />)}
+            </div>
           </div>
+        </div>
+
+        {/* AI Console bar */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-gray-400">🧠 {mood}</span>
+              <span className="text-gray-600">|</span>
+              <span className="text-gray-400">⏰ {reminders[Math.floor(Math.random() * reminders.length)]}</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              📌 WE-AIGO <span className="text-[#6bd6ff]">45%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs + Content */}
+        <div ref={dreamsRef} className="relative" style={{ zIndex: 1 }}>
+          <nav className="flex items-center justify-center gap-2 px-4 mb-6">
+            <div className="glass rounded-2xl p-1 inline-flex">
+              {tabs.map(t => (
+                <button key={t.key} onClick={() => setSection(t.key)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    section === t.key ? 'bg-purple-500/20 text-purple-300 shadow-sm' : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                ><span className="mr-1">{t.icon}</span>{t.label}</button>
+              ))}
+            </div>
+          </nav>
+          {/* Search bar */}
+          <div className="max-w-md mx-auto px-4 mb-6">
+            <input type="text" value={searchQuery} onChange={e => handleSearch(e.target.value)}
+              placeholder="🔍 搜索梦想..."
+              className="w-full glass rounded-xl px-4 py-2.5 text-sm text-gray-200 outline-none glow-border placeholder:text-gray-600"
+            />
+          </div>
+
+          <main className="max-w-4xl mx-auto px-4 pb-20">
+            {searchQuery.trim() && searchResults !== null ? (
+              searchResults.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-4xl mb-4">🔍</p>
+                  <p className="text-gray-500">没有找到匹配的梦想</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs text-gray-500 mb-3">找到 {searchResults.length} 个结果</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {searchResults.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
+                  </div>
+                </div>
+              )
+            ) : isWorldSection ? (
+              <>
+                <div className="flex gap-2 mb-6 justify-center">
+                  {newsCats.map(c => (
+                    <button key={c.key} onClick={() => setNewsFilter(c.key)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        newsFilter === c.key ? 'bg-violet-500/20 text-violet-300' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >{c.label}</button>
+                  ))}
+                </div>
+                {newsLoading ? (
+                  <div className="flex justify-center py-16">
+                    <svg className="animate-spin h-8 w-8 text-purple-400" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {(newsFilter === 'all' ? news : news.filter(n => n.category === newsFilter)).map((item, i) => (
+                      <div key={i} className="glass rounded-xl p-4 hover:bg-white/5 transition">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
+                          <span className="text-[10px] text-gray-500">{item.time}</span>
+                        </div>
+                        <p className="text-sm leading-relaxed opacity-80">{item.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : loading ? (
+              <div className="flex justify-center py-16">
+                <svg className="animate-spin h-8 w-8 text-purple-400" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              </div>
+            ) : error ? (
+              <p className="text-center text-red-400 py-16">{error}</p>
+            ) : section === 'favorites' && dreams.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-4xl mb-4">⭐</p>
+                <p className="text-gray-500">还没有收藏的梦想</p>
+              </div>
+            ) : dreams.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-4xl mb-4">✨</p>
+                <p className="text-gray-500">还没有梦想，快来第一个发布吧</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {dreams.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
+              </div>
+            )}
+          </main>
         </div>
       </div>
 
-      {/* AI Console bar */}
-      <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
-        <div className="max-w-3xl mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-4 text-sm">
-            <span className="text-gray-400">🧠 {mood}</span>
-            <span className="text-gray-600">|</span>
-            <span className="text-gray-400">⏰ {reminders[Math.floor(Math.random() * reminders.length)]}</span>
-          </div>
-          <div className="text-xs text-gray-500">
-            📌 WE-AIGO <span className="text-[#6bd6ff]">45%</span>
-          </div>
-        </div>
-      </div>
+      {/* Mobile FAB */}
+      <button onClick={() => setShowMobilePanel(true)}
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg shadow-purple-500/30 flex items-center justify-center text-white text-2xl z-50 active:scale-90 transition-transform"
+      >✨</button>
 
-      {/* Tabs + Content */}
-      <div ref={dreamsRef} className="relative" style={{ zIndex: 1 }}>
-        <nav className="flex items-center justify-center gap-1 px-4 mb-8">
-          <div className="glass rounded-2xl p-1 inline-flex">
-            {tabs.map(t => (
-              <button key={t.key} onClick={() => setSection(t.key)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  section === t.key ? 'bg-purple-500/20 text-purple-300 shadow-sm' : 'text-gray-400 hover:text-gray-200'
-                }`}
-              ><span className="mr-1">{t.icon}</span>{t.label}</button>
-            ))}
-          </div>
-        </nav>
-
-        <main className="max-w-4xl mx-auto px-4 pb-20">
-          {isWorldSection ? (
-            <>
-              <div className="flex gap-2 mb-6 justify-center">
-                {newsCats.map(c => (
-                  <button key={c.key} onClick={() => setNewsFilter(c.key)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      newsFilter === c.key ? 'bg-violet-500/20 text-violet-300' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+      {/* Mobile bottom sheet */}
+      {showMobilePanel && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={closeMobilePanel}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div onClick={e => e.stopPropagation()}
+            className="absolute bottom-0 left-0 right-0 max-h-[85vh] rounded-t-3xl glass overflow-y-auto"
+          >
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />
+            <div className="px-4 pb-6 pt-2">
+              {/* Mobile Stats */}
+              <div className="glass rounded-2xl p-3 mb-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {counters.map((item, i) => (
+                    <div key={i} className="text-center">
+                      <div className="text-lg font-black glow-text">{item.value.toLocaleString()}</div>
+                      <div className="text-[10px] text-gray-400 mt-0.5">{item.suffix}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Mobile AI bar */}
+              <div className="glass rounded-2xl px-4 py-2 flex items-center justify-between mb-3">
+                <span className="text-xs text-gray-400">🧠 {mood}</span>
+                <span className="text-[10px] text-gray-500">📌 WE-AIGO <span className="text-[#6bd6ff]">45%</span></span>
+              </div>
+              {/* Mobile search */}
+              <input type="text" value={searchQuery} onChange={e => handleSearch(e.target.value)}
+                placeholder="🔍 搜索梦想..."
+                className="w-full glass rounded-xl px-3 py-2 text-xs text-gray-200 outline-none glow-border placeholder:text-gray-600 mb-3"
+              />
+              {/* Mobile Tabs */}
+              <div className="grid grid-cols-5 gap-1 mb-3">
+                {tabs.map(t => (
+                  <button key={t.key} onClick={() => { setSection(t.key); setShowMobilePanel(false) }}
+                    className={`py-2 rounded-lg text-[10px] font-medium transition-all ${
+                      section === t.key ? 'bg-purple-500/20 text-purple-300' : 'text-gray-400'
                     }`}
-                  >{c.label}</button>
+                  >{t.icon}<br/>{t.label}</button>
                 ))}
               </div>
-              {newsLoading ? (
-                <div className="flex justify-center py-16">
-                  <svg className="animate-spin h-8 w-8 text-purple-400" viewBox="0 0 24 24">
+            </div>
+            {/* Mobile content area */}
+            <div className="px-4 pb-8">
+              {isWorldSection ? (
+                <div className="space-y-2">
+                  <div className="flex gap-2 mb-3">
+                    {newsCats.map(c => (
+                      <button key={c.key} onClick={() => setNewsFilter(c.key)}
+                        className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                          newsFilter === c.key ? 'bg-violet-500/20 text-violet-300' : 'bg-white/5 text-gray-400'
+                        }`}
+                      >{c.label}</button>
+                    ))}
+                  </div>
+                  {newsLoading ? (
+                    <div className="flex justify-center py-8">
+                      <svg className="animate-spin h-6 w-6 text-purple-400" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(newsFilter === 'all' ? news : news.filter(n => n.category === newsFilter)).map((item, i) => (
+                        <div key={i} className="glass rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
+                            <span className="text-[10px] text-gray-500">{item.time}</span>
+                          </div>
+                          <p className="text-xs leading-relaxed opacity-80">{item.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : searchQuery.trim() && searchResults !== null ? (
+                searchResults.length === 0 ? (
+                  <div className="text-center py-8"><p className="text-gray-500 text-xs">没有找到匹配的梦想</p></div>
+                ) : (
+                  <div>
+                    <p className="text-[10px] text-gray-500 mb-2">找到 {searchResults.length} 个结果</p>
+                    <div className="space-y-3">
+                      {searchResults.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
+                    </div>
+                  </div>
+                )
+              ) : loading ? (
+                <div className="flex justify-center py-8">
+                  <svg className="animate-spin h-6 w-6 text-purple-400" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                 </div>
+              ) : error ? (
+                <p className="text-center text-red-400 py-8 text-xs">{error}</p>
+              ) : section === 'favorites' && dreams.length === 0 ? (
+                <div className="text-center py-8"><p className="text-gray-500 text-xs">还没有收藏的梦想</p></div>
+              ) : dreams.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-2xl mb-2">✨</p>
+                  <p className="text-gray-500 text-xs">还没有梦想</p>
+                </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {(newsFilter === 'all' ? news : news.filter(n => n.category === newsFilter)).map((item, i) => (
-                    <div key={i} className="glass rounded-xl p-4 hover:bg-white/5 transition">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
-                        <span className="text-[10px] text-gray-500">{item.time}</span>
-                      </div>
-                      <p className="text-sm leading-relaxed opacity-80">{item.title}</p>
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  {dreams.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
                 </div>
               )}
-            </>
-          ) : loading ? (
-            <div className="flex justify-center py-16">
-              <svg className="animate-spin h-8 w-8 text-purple-400" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
             </div>
-          ) : error ? (
-            <p className="text-center text-red-400 py-16">{error}</p>
-          ) : dreams.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-4xl mb-4">✨</p>
-              <p className="text-gray-500">还没有梦想，快来第一个发布吧</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dreams.map(dream => <DreamCard key={dream.id} dream={dream} onLike={handleLike} />)}
-            </div>
-          )}
-        </main>
-      </div>
+          </div>
+        </div>
+      )}
 
       <footer className="relative text-center pb-12 px-4" style={{ zIndex: 1 }}>
         <button onClick={() => setShowAbout(!showAbout)} className="text-sm text-gray-500 hover:text-gray-300 transition">

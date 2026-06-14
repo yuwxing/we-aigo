@@ -116,9 +116,11 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
       resize()
       window.addEventListener('resize', resize)
 
-      // Background star field (decorative, drifting)
-      const count = Math.floor((canvas.width * canvas.height) / 9000)
-      bgRef.current = Array.from({ length: Math.max(count, 100) }, () => ({
+      // Fewer stars + skip nebulae on mobile for perf
+      const isMobile = Math.min(canvas.width, canvas.height) < 768
+      const divisor = isMobile ? 18000 : 9000
+      const count = Math.floor((canvas.width * canvas.height) / divisor)
+      bgRef.current = Array.from({ length: Math.max(count, 60) }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         r: Math.random() * 1.2 + 0.1,
@@ -128,8 +130,7 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
         vy: (Math.random() - 0.5) * 0.04,
       }))
 
-      // Nebulae
-      const nebulae = Array.from({ length: 3 }, () => ({
+      const nebulae = isMobile ? [] : Array.from({ length: 3 }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         r: 80 + Math.random() * 150,
@@ -155,7 +156,14 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
       window.addEventListener('click', onGlobalClick)
 
       let frame: number
-      const animate = () => {
+      let lastFrameTime = 0
+      const animate = (timestamp: number) => {
+        // Throttle to 30fps on mobile, skip when tab hidden
+        if (isMobile) {
+          if (document.hidden) { frame = requestAnimationFrame(animate); return }
+          if (timestamp - lastFrameTime < 33) { frame = requestAnimationFrame(animate); return }
+          lastFrameTime = timestamp
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         const now = Date.now()
         const w = canvas.width
@@ -260,14 +268,14 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
           shootersRef.current.push({
             x: Math.random() * w * 0.8 + w * 0.1, y: Math.random() * h * 0.3,
             vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-            life: 0, maxLife: 40 + Math.random() * 30, tail: [],
+            life: 0, maxLife: (isMobile ? 20 : 40) + Math.random() * (isMobile ? 15 : 30), tail: [],
           })
           lastShoot.current = now
         }
         shootersRef.current = shootersRef.current.filter(s => {
           s.life++
           s.tail.push({ x: s.x, y: s.y })
-          if (s.tail.length > 25) s.tail.shift()
+          if (s.tail.length > (isMobile ? 10 : 25)) s.tail.shift()
           s.x += s.vx; s.y += s.vy
           const hg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 8)
           hg.addColorStop(0, 'rgba(255, 255, 255, 0.9)')
@@ -287,8 +295,8 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
           return s.life < s.maxLife && s.x > -20 && s.x < w + 20 && s.y > -20 && s.y < h + 20
         })
 
-        // Random cosmic event
-        if (!evRef.current.active && now - lastEvent.current > 15000 + Math.random() * 25000) {
+        // Random cosmic event (less frequent on mobile)
+        if (!evRef.current.active && now - lastEvent.current > (isMobile ? 45000 : 15000) + Math.random() * (isMobile ? 35000 : 25000)) {
           evRef.current = {
             active: true, x: Math.random() * w, y: 50 + Math.random() * (h * 0.4),
             progress: 0, type: Math.random() > 0.5 ? 'streak' : 'bubble', bubbleR: 0,
@@ -333,7 +341,7 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
               ctx.arc(ev.x, ev.y, ev.bubbleR, 0, Math.PI * 2)
               ctx.fill()
             }
-            const pCount = Math.floor(ev.progress * 80)
+            const pCount = Math.floor(ev.progress * (isMobile ? 30 : 80))
             for (let i = 0; i < pCount; i++) {
               const angle = Math.random() * Math.PI * 2
               const dist = Math.random() * ev.bubbleR
@@ -383,7 +391,7 @@ const Universe = forwardRef<{ addStar: (dreamId: number) => void }, { dreams: Dr
         frame = requestAnimationFrame(animate)
       }
 
-      animate()
+      animate(0)
       return () => {
         cancelAnimationFrame(frame)
         window.removeEventListener('resize', resize)
