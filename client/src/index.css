@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #05050f;
+  --bg-secondary: #0a0a1a;
+  --accent: #8b5cf6;
+  --accent-light: #a78bfa;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg-primary);
+  color: #e2e8f0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glow-text {
+  background: linear-gradient(135deg, #c084fc, #818cf8, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-border:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+.dream-card {
+  transition: all 0.3s ease;
+}
+
+.dream-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.08);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes star-birth {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+    filter: blur(4px);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(3);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes toast-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+  }
+}
+
+.toast-enter {
+  animation: toast-in 0.5s ease-out forwards;
+}
+
+.toast-exit {
+  animation: toast-out 0.4s ease-in forwards;
+}

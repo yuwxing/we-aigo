@@ -1,0 +1,11 @@
+name = "we-aigo-auto-dream"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "we-aigo-db"
+database_id = "be04d021-3769-4ca5-91c8-196056621490"
+
+[triggers]
+crons = ["0 * * * *"]
