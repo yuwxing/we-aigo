@@ -173,8 +173,8 @@ export default function App() {
         </div>
       </section>
 
-      {/* Desktop: visible md+, hidden on mobile */}
-      <div className="hidden md:block">
+      {/* Content Section — visible on all screens */}
+      <div className="block">
         {/* Stats */}
         <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
           <div className="max-w-3xl mx-auto glass rounded-2xl p-4 md:p-6">
@@ -317,6 +317,7 @@ export default function App() {
         </div>
   )
 }
+
 
 
 
