@@ -115,6 +115,15 @@ export async function checkFavorite(dreamId: number): Promise<{ favorited: boole
   return res.json()
 }
 
+export interface NewsItem {
+  title: string; tag: string; time: string; category: string
+}
+
+export async function fetchNews(): Promise<NewsItem[]> {
+  const res = await fetch('/api/news')
+  return res.json()
+}
+
 export async function aiExpand(content: string): Promise<AIExpand> {
   const res = await fetch('/api/ai/expand', {
     method: 'POST',

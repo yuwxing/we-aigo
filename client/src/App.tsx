@@ -1,29 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, type Dream } from './api'
+import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, type Dream, type NewsItem } from './api'
 import DreamCard from './components/DreamCard'
 import DreamForm from './components/DreamForm'
 import Universe from './components/Universe'
 
 type Section = 'hot' | 'latest' | 'random' | 'world'
-
-interface NewsItem {
-  title: string; tag: string; time: string; category: string
-}
-
-const newsData: NewsItem[] = [
-  { title: 'SpaceX Starship 完成新一轮静态点火测试', tag: '🚀 航天', time: '2分钟前', category: 'space' },
-  { title: 'OpenAI 内部测试新一代推理增强模型', tag: '🤖 AI', time: '18分钟前', category: 'ai' },
-  { title: 'Google DeepMind 在蛋白质预测上取得新突破', tag: '🧬 科学', time: '1小时前', category: 'ai' },
-  { title: '中国航天启动新一代载人登月系统设计', tag: '🚀 航天', time: '3小时前', category: 'space' },
-  { title: 'Anthropic 优化 Claude 多步推理能力', tag: '🤖 AI', time: '5小时前', category: 'ai' },
-  { title: 'NASA 宣布 Artemis Ⅳ 月球基地选址方案', tag: '🌙 航天', time: '6小时前', category: 'space' },
-  { title: 'Meta 发布开源 AI 模型 Llama 4', tag: '🤖 AI', time: '8小时前', category: 'ai' },
-  { title: '蓝色起源完成 New Glenn 火箭二级测试', tag: '🚀 航天', time: '12小时前', category: 'space' },
-  { title: 'MIT 研发新型室温超导材料引发热议', tag: '🔬 科学', time: '15小时前', category: 'science' },
-  { title: '全球首座商用核聚变反应堆获批建设', tag: '⚡ 能源', time: '2天前', category: 'science' },
-  { title: 'Apple 正开发 AI 驱动的健康监测平台', tag: '🍎 AI', time: '2天前', category: 'ai' },
-  { title: '量子计算机首次完成实用级药物分子模拟', tag: '💊 科学', time: '3天前', category: 'science' },
-]
 
 const moods = ['稳定 🙂', '偏兴奋 🚀', '专注 🧠', '灵感爆发 ⚡']
 const reminders = ['整理想法', '探索未知领域', '关注 AI 前沿', '给梦想加点细节', '看看别人在创造什么']
@@ -84,6 +65,8 @@ export default function App() {
   const [showToast, setShowToast] = useState(false)
   const [toastKey, setToastKey] = useState(0)
   const [mood, setMood] = useState(moods[0])
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [newsLoading, setNewsLoading] = useState(false)
   const [newsFilter, setNewsFilter] = useState('all')
   const universeRef = useRef<{ addStar: (dreamId: number) => void }>(null)
   const dreamsRef = useRef<HTMLDivElement>(null)
@@ -92,9 +75,15 @@ export default function App() {
   const isWorldSection = section === 'world'
 
   useEffect(() => {
-    if (isWorldSection) { setLoading(false); return }
+    if (isWorldSection) { fetchNewsData(); return }
     loadDreams(section)
   }, [section])
+
+  const fetchNewsData = async () => {
+    setNewsLoading(true)
+    try { setNews(await fetchNews()) } catch { setNews([]) }
+    finally { setNewsLoading(false) }
+  }
 
   // Rotate mood
   useEffect(() => {
@@ -134,8 +123,6 @@ export default function App() {
     { value: 328, suffix: '个团队正在协作' },
     { value: 17, suffix: '个梦想已变成真实产品' },
   ]
-
-  const filteredNews = newsFilter === 'all' ? newsData : newsData.filter(n => n.category === newsFilter)
 
   return (
     <div className="relative">
@@ -203,7 +190,6 @@ export default function App() {
         <main className="max-w-4xl mx-auto px-4 pb-20">
           {isWorldSection ? (
             <>
-              {/* News category filter */}
               <div className="flex gap-2 mb-6 justify-center">
                 {newsCats.map(c => (
                   <button key={c.key} onClick={() => setNewsFilter(c.key)}
@@ -213,18 +199,26 @@ export default function App() {
                   >{c.label}</button>
                 ))}
               </div>
-              {/* News grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {filteredNews.map((item, i) => (
-                  <div key={i} className="glass rounded-xl p-4 hover:bg-white/5 transition">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
-                      <span className="text-[10px] text-gray-500">{item.time}</span>
+              {newsLoading ? (
+                <div className="flex justify-center py-16">
+                  <svg className="animate-spin h-8 w-8 text-purple-400" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {(newsFilter === 'all' ? news : news.filter(n => n.category === newsFilter)).map((item, i) => (
+                    <div key={i} className="glass rounded-xl p-4 hover:bg-white/5 transition">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
+                        <span className="text-[10px] text-gray-500">{item.time}</span>
+                      </div>
+                      <p className="text-sm leading-relaxed opacity-80">{item.title}</p>
                     </div>
-                    <p className="text-sm leading-relaxed opacity-80">{item.title}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </>
           ) : loading ? (
             <div className="flex justify-center py-16">
