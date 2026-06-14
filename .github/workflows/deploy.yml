@@ -25,4 +25,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: client
-          command: pages deploy dist --branch production --project-name social-os
+          command: pages deploy dist --branch main --project-name social-os
