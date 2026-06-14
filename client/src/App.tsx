@@ -157,7 +157,7 @@ export default function App() {
             <span className="glow-text">WE-AIGO</span>
           </h1>
           <p className="mt-4 md:mt-5 text-sm md:text-base text-gray-400 font-light">如果资源不是问题，你最想创造什么？</p>
-          <p className="mt-1.5 text-xs md:text-sm text-gray-600">记录那些还不存在的东西。</p>
+          <p className="mt-1.5 text-xs md:text-sm text-gray-600">记录那些还不存在的东西 · 探索火星基地 →</p>
         </div>
         <div className="mt-10 w-full max-w-lg mx-auto">
           <DreamForm onSubmit={handlePublish} inputRef={inputRef} />
@@ -180,6 +180,22 @@ export default function App() {
               {counters.map((item, i) => <AnimatedCounter key={i} value={item.value} suffix={item.suffix} />)}
             </div>
           </div>
+        </div>
+
+        {/* Mars Base promo card */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <a href="https://mars.we-aigo.cn" target="_blank" rel="noopener noreferrer"
+            className="max-w-3xl mx-auto glass rounded-2xl p-4 flex items-center gap-4 hover:bg-white/[0.06] transition group block">
+            <div className="text-3xl">🔴</div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-sm font-bold text-orange-300">火星基地</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">运行中</span>
+              </div>
+              <p className="text-xs text-gray-500">在火星上建立自给自足的人类定居点，管理能源、水源、空气和资源</p>
+            </div>
+            <div className="text-gray-500 group-hover:text-gray-300 transition text-sm">↗</div>
+          </a>
         </div>
 
         {/* AI Console bar */}
@@ -317,6 +333,19 @@ export default function App() {
                   ))}
                 </div>
               </div>
+              {/* Mobile Mars card */}
+              <a href="https://mars.we-aigo.cn" target="_blank" rel="noopener noreferrer"
+                className="glass rounded-2xl p-3 flex items-center gap-3 mb-3 hover:bg-white/[0.06] transition block">
+                <div className="text-2xl">🔴</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-xs font-bold text-orange-300">火星基地</span>
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-green-500/20 text-green-400">运行中</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">火星自给自足定居点模拟</p>
+                </div>
+                <div className="text-gray-500 text-xs">↗</div>
+              </a>
               {/* Mobile AI bar */}
               <div className="glass rounded-2xl px-4 py-2 flex items-center justify-between mb-3">
                 <span className="text-xs text-gray-400">🧠 {mood}</span>
