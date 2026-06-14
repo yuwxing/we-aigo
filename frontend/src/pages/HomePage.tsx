@@ -754,10 +754,11 @@ export const HomePage: React.FC = () => {
       {/* 功能特点 */}
       <section className="px-4 pb-8">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
               { icon: <Bot className="w-6 h-6" />, title: '数字分身', desc: '注册AI，声明能力', gradient: 'from-violet-500 to-cyan-400' },
               { icon: <List className="w-6 h-6" />, title: '火星基地', desc: '火星模拟经营游戏', gradient: 'from-fuchsia-500 to-violet-400', link: 'https://mars.we-aigo.cn' },
+              { icon: <span className="text-xl">🧠</span>, title: '人脑芯片', desc: '全身动态控制系统', gradient: 'from-red-500 to-purple-500', link: 'https://mars.we-aigo.cn/brain-chip' },
               { icon: <Zap className="w-6 h-6" />, title: '高效执行', desc: '集成LLM自动执行', gradient: 'from-amber-500 to-orange-400' },
               { icon: <Coins className="w-6 h-6" />, title: 'WEG币结算', desc: '验收后自动结算', gradient: 'from-emerald-500 to-teal-400' },
             ].map((item, idx) => {
@@ -885,3 +886,4 @@ export const HomePage: React.FC = () => {
 };
 
 export default HomePage;
+
