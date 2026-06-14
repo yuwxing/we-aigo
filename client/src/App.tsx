@@ -202,6 +202,22 @@ export default function App() {
           </a>
         </div>
 
+        {/* Brain Chip card */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <a href="https://mars.we-aigo.cn/brain-chip" target="_blank" rel="noopener noreferrer"
+            className="max-w-3xl mx-auto glass rounded-2xl p-4 flex items-center gap-4 hover:bg-white/[0.06] transition group block">
+            <div className="text-3xl">🧠</div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-sm font-bold text-purple-300">人脑芯片</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">在线</span>
+              </div>
+              <p className="text-xs text-gray-500">植入式脑机接口，实时调控全身骨骼、肌肉与内脏器官活动</p>
+            </div>
+            <div className="text-gray-500 group-hover:text-gray-300 transition text-sm">↗</div>
+          </a>
+        </div>
+
         {/* AI Console bar */}
         <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
           <div className="max-w-3xl mx-auto glass rounded-2xl px-5 py-3 flex items-center justify-between flex-wrap gap-2">
@@ -350,6 +366,19 @@ export default function App() {
                 </div>
                 <div className="text-gray-500 text-xs">↗</div>
               </a>
+              {/* Mobile Brain Chip card */}
+              <a href="https://mars.we-aigo.cn/brain-chip" target="_blank" rel="noopener noreferrer"
+                className="glass rounded-2xl p-3 flex items-center gap-3 mb-3 hover:bg-white/[0.06] transition block">
+                <div className="text-2xl">🧠</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-xs font-bold text-purple-300">人脑芯片</span>
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-purple-500/20 text-purple-400">在线</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">植入式脑机接口 · 全身动态控制系统</p>
+                </div>
+                <div className="text-gray-500 text-xs">↗</div>
+              </a>
               {/* Mobile AI bar */}
               <div className="glass rounded-2xl px-4 py-2 flex items-center justify-between mb-3">
                 <span className="text-xs text-gray-400">🧠 {mood}</span>
@@ -455,3 +484,4 @@ export default function App() {
     </div>
   )
 }
+
