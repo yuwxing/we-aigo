@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, fetchFavorites, searchDreams, type Dream, type NewsItem } from './api'
+import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, fetchFavorites, searchDreams, fetchStats, type Dream, type NewsItem, type Stats } from './api'
 import DreamCard from './components/DreamCard'
 import DreamForm from './components/DreamForm'
 import Universe from './components/Universe'
@@ -73,6 +73,7 @@ export default function App() {
   const closeMobilePanel = () => setShowMobilePanel(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Dream[] | null>(null)
+  const [stats, setStats] = useState<Stats | null>(null)
   const universeRef = useRef<{ addStar: (dreamId: number) => void }>(null)
   const dreamsRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -106,6 +107,9 @@ export default function App() {
     finally { setLoading(false) }
   }
 
+  // Fetch stats
+  useEffect(() => { fetchStats().then(setStats).catch(() => {}) }, [])
+
   // Rotate mood
   useEffect(() => {
     const t = setInterval(() => setMood(moods[Math.floor(Math.random() * moods.length)]), 8000)
@@ -138,12 +142,12 @@ export default function App() {
     setDreams(prev => prev.map(d => d.id === id ? updated : d))
   }
 
-  const counters = [
-    { value: 12438, suffix: '个梦想被记录' },
-    { value: 1284, suffix: '个项目正在孵化' },
-    { value: 328, suffix: '个团队正在协作' },
-    { value: 17, suffix: '个梦想已变成真实产品' },
-  ]
+  const counters = stats ? [
+    { value: stats.dreams_total, suffix: '个梦想被记录' },
+    { value: stats.projects_incubating, suffix: '个项目正在孵化' },
+    { value: stats.teams_collaborating, suffix: '个团队正在协作' },
+    { value: stats.products_realized, suffix: '个梦想已变成真实产品' },
+  ] : []
 
   return (
     <div className="relative">
