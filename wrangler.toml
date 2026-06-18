@@ -1,4 +1,4 @@
-name = "we-aigo"
+name = "social-os"
 compatibility_date = "2026-06-01"
 pages_build_output_dir = "./client/dist"
 
@@ -8,7 +8,7 @@ database_name = "we-aigo-db"
 database_id = "be04d021-3769-4ca5-91c8-196056621490"
 
 [env.production]
-name = "we-aigo"
+name = "social-os"
 
 [[env.production.d1_databases]]
 binding = "DB"

@@ -4,6 +4,7 @@ import path from 'path'
 import dreamsRouter from './routes/dreams'
 import aiRouter from './routes/ai'
 import newsRouter from './routes/news'
+import notesRouter from './routes/notes'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -14,6 +15,7 @@ app.use(express.json())
 app.use('/api/dreams', dreamsRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/news', newsRouter)
+app.use('/api/notes', notesRouter)
 
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist')
 app.use(express.static(clientDist))
@@ -22,5 +24,5 @@ app.use((_req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(🌠 WE-AIGO API running at http://localhost:)
+  console.log(`🌠 WE-AIGO API running at http://localhost:${PORT}`)
 })

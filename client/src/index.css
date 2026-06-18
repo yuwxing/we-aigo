@@ -12,6 +12,7 @@
 body {
   margin: 0;
   font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 450;
   background: var(--bg-primary);
   color: #e2e8f0;
   min-height: 100vh;
@@ -106,4 +107,18 @@ body {
 
 .toast-exit {
   animation: toast-out 0.4s ease-in forwards;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.marquee {
+  animation: marquee 28s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .marquee {
+    animation-duration: 18s;
+  }
 }

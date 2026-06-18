@@ -75,8 +75,8 @@ export default {
     const nickname = generateNickname()
     const likes = Math.floor(Math.random() * 30)
     const result = await env.DB.prepare(
-      'INSERT INTO dreams (content, nickname, likes) VALUES (?, ?, ?)'
-    ).bind(content, nickname, likes).run()
+      'INSERT INTO dreams (content, nickname, likes, session_id) VALUES (?, ?, ?, ?)'
+    ).bind(content, nickname, likes, 'auto_dream').run()
     await env.DB.prepare('UPDATE stats SET dreams_total = dreams_total + 1 WHERE id = 1').run()
     console.log(`[AutoDream] ✨ 新梦想 #${result.meta.last_row_id}: "${content.substring(0, 40)}..." by ${nickname}`)
 
@@ -117,8 +117,8 @@ export default {
       const content = generateContent()
       const nickname = generateNickname()
       const result = await env.DB.prepare(
-        'INSERT INTO dreams (content, nickname, likes) VALUES (?, ?, ?)'
-      ).bind(content, nickname, Math.floor(Math.random() * 30)).run()
+        'INSERT INTO dreams (content, nickname, likes, session_id) VALUES (?, ?, ?, ?)'
+      ).bind(content, nickname, Math.floor(Math.random() * 30), 'auto_dream').run()
       await env.DB.prepare('UPDATE stats SET dreams_total = dreams_total + 1 WHERE id = 1').run()
 
       // Also visit an existing dream

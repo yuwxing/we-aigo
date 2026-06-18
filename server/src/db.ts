@@ -20,6 +20,7 @@ export function getDb(): Database.Database {
         content TEXT NOT NULL,
         nickname TEXT DEFAULT '匿名',
         likes INTEGER DEFAULT 0,
+        session_id TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `)
@@ -62,10 +63,24 @@ export function getDb(): Database.Database {
       )
     `)
 
+    // Migrate: add session_id column if missing
+    try { db.exec("ALTER TABLE dreams ADD COLUMN session_id TEXT DEFAULT ''") } catch {}
+
     const row = db.prepare('SELECT COUNT(*) as cnt FROM dreams').get() as any
     if (row.cnt === 0) {
       seed()
     }
+
+    // Notes table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        text TEXT NOT NULL,
+        cat TEXT DEFAULT '其他',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
   }
   return db
 }
@@ -108,6 +123,7 @@ export interface Dream {
   content: string
   nickname: string
   likes: number
+  session_id?: string
   created_at: string
 }
 

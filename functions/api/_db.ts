@@ -18,6 +18,7 @@ export async function initDB(DB: any) {
   await DB.prepare("CREATE TABLE IF NOT EXISTS favorites (id INTEGER PRIMARY KEY AUTOINCREMENT, dream_id INTEGER NOT NULL, session_id TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(dream_id, session_id))").run()
   await DB.prepare("CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL, text TEXT NOT NULL, cat TEXT DEFAULT '其他', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run()
   await DB.prepare("INSERT OR IGNORE INTO stats (id, dreams_total, projects_incubating, teams_collaborating, products_realized) VALUES (1, 12438, 1284, 328, 17)").run()
+  // Migrate existing tables
   try { await DB.prepare("ALTER TABLE dreams ADD COLUMN session_id TEXT DEFAULT ''").run() } catch {}
 
   const { count } = await DB.prepare('SELECT COUNT(*) as count FROM dreams').first()

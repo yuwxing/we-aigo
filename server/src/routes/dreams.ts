@@ -40,6 +40,14 @@ router.get('/stats', (_req: Request, res: Response) => {
   })
 })
 
+router.get('/my', (req: Request, res: Response) => {
+  const sessionId = req.headers['x-session-id'] as string || ''
+  if (!sessionId) { res.json([]); return }
+  const db = getDb()
+  const dreams = db.prepare('SELECT * FROM dreams WHERE session_id = ? ORDER BY created_at DESC LIMIT 50').all(sessionId) as Dream[]
+  res.json(dreams)
+})
+
 router.post('/', (req: Request, res: Response) => {
   const { content, nickname } = req.body
   if (!content || typeof content !== 'string' || content.trim().length === 0) {
@@ -47,9 +55,10 @@ router.post('/', (req: Request, res: Response) => {
     return
   }
   const db = getDb()
+  const sessionId = req.headers['x-session-id'] as string || ''
   const trimmed = content.trim().slice(0, 500)
   const name = nickname && typeof nickname === 'string' ? nickname.trim().slice(0, 20) || '匿名' : '匿名'
-  const result = db.prepare('INSERT INTO dreams (content, nickname) VALUES (?, ?)').run(trimmed, name)
+  const result = db.prepare('INSERT INTO dreams (content, nickname, session_id) VALUES (?, ?, ?)').run(trimmed, name, sessionId)
   db.prepare('UPDATE stats SET dreams_total = dreams_total + 1 WHERE id = 1').run()
   const dream = db.prepare('SELECT * FROM dreams WHERE id = ?').get(result.lastInsertRowid) as Dream
   res.status(201).json(dream)

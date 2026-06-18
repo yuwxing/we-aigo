@@ -54,18 +54,17 @@ router.get('/', (_req: Request, res: Response) => {
   const itemsPerCategory = 4
 
   const categories = ['ai', 'space', 'science']
-  const result: Array<{ title: string; tag: string; time: string; category: string }> = []
+  const result: Array<{ title: string; titleCn: string; tag: string; time: string; category: string }> = []
 
   categories.forEach(cat => {
     const pool = NEWS_POOL.filter(n => n.category === cat)
     for (let i = 0; i < itemsPerCategory; i++) {
       const idx = Math.floor(seededRandom(seed + categories.indexOf(cat) * 100 + i) * pool.length)
       const item = pool[idx]
-      // Alternate between Chinese and English titles based on the day
-      const useChinese = (seed + i + categories.indexOf(cat)) % 2 === 0
       result.push({
-        title: useChinese ? item.title_cn : item.title_en,
-        tag: useChinese ? item.tag_cn : item.tag_en,
+        title: item.title_cn,
+        titleCn: item.title_en,
+        tag: item.tag_cn,
         time: '今日更新',
         category: item.category,
       })

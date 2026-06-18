@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, fetchFavorites, searchDreams, fetchStats, type Dream, type NewsItem, type Stats } from './api'
+import { fetchHot, fetchLatest, fetchRandom, publishDream, likeDream, fetchNews, fetchFavorites, fetchMyDreams, searchDreams, fetchStats, fetchNotes, addNote as apiAddNote, deleteNote as apiDeleteNote, type Dream, type NewsItem, type Stats, type Note } from './api'
 import DreamCard from './components/DreamCard'
 import DreamForm from './components/DreamForm'
 import Universe from './components/Universe'
 
-type Section = 'hot' | 'latest' | 'random' | 'world' | 'favorites'
+type Section = 'hot' | 'latest' | 'random' | 'world' | 'favorites' | 'my'
 
 const moods = ['稳定 🙂', '偏兴奋 🚀', '专注 🧠', '灵感爆发 ⚡']
 const reminders = ['整理想法', '探索未知领域', '关注 AI 前沿', '给梦想加点细节', '看看别人在创造什么']
@@ -21,6 +21,7 @@ const tabs: { key: Section; label: string; icon: string }[] = [
   { key: 'latest', label: '最新梦想', icon: '🆕' },
   { key: 'random', label: '随机梦想', icon: '🌎' },
   { key: 'favorites', label: '我的收藏', icon: '⭐' },
+  { key: 'my', label: '我的梦想', icon: '👤' },
   { key: 'world', label: '世界动态', icon: '🌍' },
 ]
 
@@ -63,6 +64,12 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAbout, setShowAbout] = useState(false)
+  const [showNotebook, setShowNotebook] = useState(false)
+  const [notes, setNotes] = useState<Note[]>([])
+  const [noteLoading, setNoteLoading] = useState(false)
+  const [noteText, setNoteText] = useState('')
+  const [noteCat, setNoteCat] = useState('命令')
+  const [noteFilter, setNoteFilter] = useState('全部')
   const [showToast, setShowToast] = useState(false)
   const [toastKey, setToastKey] = useState(0)
   const [mood, setMood] = useState(moods[0])
@@ -81,6 +88,7 @@ export default function App() {
   useEffect(() => {
     if (isWorldSection) { fetchNewsData(); return }
     if (section === 'favorites') { loadFavorites(); return }
+    if (section === 'my') { loadMyDreams(); return }
     setSearchResults(null)
     loadDreams(section)
   }, [section])
@@ -94,6 +102,12 @@ export default function App() {
   const loadFavorites = async () => {
     setLoading(true)
     try { setDreams(await fetchFavorites()) } catch {}
+    finally { setLoading(false) }
+  }
+
+  const loadMyDreams = async () => {
+    setLoading(true); setError('')
+    try { setDreams(await fetchMyDreams()) } catch { setError('加载失败') }
     finally { setLoading(false) }
   }
 
@@ -133,6 +147,30 @@ export default function App() {
 
   const handleStarClick = (dreamId: number) => {
     if (dreams.find(d => d.id === dreamId)) { setSection('latest'); dreamsRef.current?.scrollIntoView({ behavior: 'smooth' }) }
+  }
+
+  const loadNotes = async () => {
+    setNoteLoading(true)
+    try { setNotes(await fetchNotes()) } catch { setNotes([]) }
+    finally { setNoteLoading(false) }
+  }
+
+  useEffect(() => { if (showNotebook) loadNotes() }, [showNotebook])
+
+  const handleAddNote = async () => {
+    const text = noteText.trim()
+    if (!text) return
+    try {
+      const note = await apiAddNote(text, noteCat)
+      setNotes(prev => [note, ...prev])
+      setNoteText('')
+    } catch {}
+  }
+  const handleDelNote = async (id: number) => {
+    try {
+      await apiDeleteNote(id)
+      setNotes(prev => prev.filter(n => n.id !== id))
+    } catch {}
   }
 
   const handleLike = async (id: number) => {
@@ -202,6 +240,130 @@ export default function App() {
           </div>
         </div>
 
+        {/* 多智能体协同办公 */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto">
+            <div className="glass rounded-2xl overflow-hidden">
+              <div className="h-[3px] bg-gradient-to-r from-violet-500/60 via-fuchsia-500/60 to-indigo-500/60" />
+              <div className="px-5 py-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">多智能体协同办公</p>
+                    <p className="text-xs text-gray-500">一个AI不够用？现在拥有整个AI团队</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                  当你休息时，你的AI团队仍在运转——AI项目经理统筹任务、AI执行官拍板决策、AI分析师深挖数据、AI文案持续输出。数字分身团队全天候在线，各司其职，自动协作。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 7×24 英语教学AI团队入口 */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto">
+            <a href="https://team.we-aigo.cn" target="_blank" rel="noopener noreferrer"
+              className="group block glass rounded-2xl px-5 py-4 hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.01]">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white group-hover:text-rose-300 transition-colors">7×24 英语教学AI团队</p>
+                    <p className="text-xs text-gray-500">全天候AI学习支持 · 点击进入</p>
+                  </div>
+                </div>
+                <span className="text-xs text-rose-400 group-hover:text-rose-300 font-medium flex items-center gap-1">
+                  进入 <span className="text-base">→</span>
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        {/* AI学校指挥中心控制台入口 */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto">
+            <a href="https://console.we-aigo.cn" target="_blank" rel="noopener noreferrer"
+              className="group block glass rounded-2xl px-5 py-4 hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.01]">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white group-hover:text-indigo-300 transition-colors">AI学校指挥中心控制台</p>
+                    <p className="text-xs text-gray-500">多智能体 · 任务流 · 可视化看板 · 实时状态</p>
+                  </div>
+                </div>
+                <span className="text-xs text-indigo-400 group-hover:text-indigo-300 font-medium flex items-center gap-1">
+                  进入 <span className="text-base">→</span>
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        {/* AI高考决策中心入口 */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto">
+            <a href="https://gaokao.we-aigo.cn" target="_blank" rel="noopener noreferrer"
+              className="group block glass rounded-2xl px-5 py-4 hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.01]">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white group-hover:text-orange-300 transition-colors">AI高考决策中心 v3</p>
+                    <p className="text-xs text-gray-500">多智能体志愿模拟 · 冲稳保推荐 · 风险分析</p>
+                  </div>
+                </div>
+                <span className="text-xs text-orange-400 group-hover:text-orange-300 font-medium flex items-center gap-1">
+                  进入 <span className="text-base">→</span>
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        {/* 数字孪生政府入口 */}
+        <div className="relative px-4 pb-6" style={{ zIndex: 1 }}>
+          <div className="max-w-3xl mx-auto">
+            <a href="https://city.we-aigo.cn" target="_blank" rel="noopener noreferrer"
+              className="group block glass rounded-2xl px-5 py-4 hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.01]">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors">AI Government Simulator 数字孪生政府</p>
+                    <p className="text-xs text-gray-500">深圳政府运行模拟器 · 政策 → 部门执行 → 城市反馈 → 再决策</p>
+                  </div>
+                </div>
+                <span className="text-xs text-emerald-400 group-hover:text-emerald-300 font-medium flex items-center gap-1">
+                  进入 <span className="text-base">→</span>
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         {/* Tabs + Content */}
         <div ref={dreamsRef} className="relative" style={{ zIndex: 1 }}>
           <nav className="flex items-center justify-center gap-2 px-4 mb-6">
@@ -264,7 +426,7 @@ export default function App() {
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#7ad0ff]">{item.tag}</span>
                           <span className="text-[10px] text-gray-500">{item.time}</span>
                         </div>
-                        <p className="text-sm leading-relaxed opacity-80">{item.title}</p>
+                        <p className="text-sm leading-relaxed font-medium">{item.titleCn ? <><span className="text-gray-100">{item.titleCn}</span><br /><span className="text-gray-500 text-xs font-normal">{item.title}</span></> : <span className="text-gray-100">{item.title}</span>}</p>
                       </div>
                     ))}
                   </div>
@@ -284,6 +446,11 @@ export default function App() {
                 <p className="text-4xl mb-4">⭐</p>
                 <p className="text-gray-500">还没有收藏的梦想</p>
               </div>
+            ) : section === 'my' && dreams.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-4xl mb-4">👤</p>
+                <p className="text-gray-500">你还没有发布过梦想，快去发布第一个吧</p>
+              </div>
             ) : dreams.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-4xl mb-4">✨</p>
@@ -302,6 +469,53 @@ export default function App() {
 
 
 
+
+      {/* 笔记本按钮 */}
+      <button onClick={() => setShowNotebook(true)}
+        className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white shadow-lg hover:scale-110 transition-transform z-50 flex items-center justify-center text-lg">
+        📓
+      </button>
+
+      {/* 笔记本弹窗 */}
+      {showNotebook && <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowNotebook(false)}>
+        <div className="bg-zinc-900 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl border border-zinc-800" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-5 border-b border-zinc-800">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">📓 我的笔记本</h2>
+            <button onClick={() => setShowNotebook(false)} className="text-zinc-500 hover:text-white text-lg">✕</button>
+          </div>
+          <div className="p-5 border-b border-zinc-800">
+            <div className="flex gap-2 mb-2">
+              <input value={noteText} onChange={e => setNoteText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddNote()}
+                placeholder="记下有用的东西..." className="flex-1 bg-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:ring-1 focus:ring-violet-500 placeholder:text-zinc-600" />
+              <select value={noteCat} onChange={e => setNoteCat(e.target.value)}
+                className="bg-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:ring-1 focus:ring-violet-500">
+                <option>命令</option><option>技巧</option><option>项目</option><option>其他</option>
+              </select>
+              <button onClick={handleAddNote} className="px-4 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-medium">保存</button>
+            </div>
+          </div>
+          <div className="flex gap-2 px-5 pt-4 pb-2">
+            {['全部','命令','技巧','项目','其他'].map(c => (
+              <button key={c} onClick={() => setNoteFilter(c)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition ${noteFilter === c ? 'bg-violet-500/20 text-violet-300' : 'bg-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>{c}</button>
+            ))}
+          </div>
+          <div className="flex-1 overflow-auto p-5 space-y-2">
+            {noteLoading ? (
+              <p className="text-center text-zinc-600 text-sm py-8">加载中...</p>
+            ) : notes.filter(n => noteFilter === '全部' || n.cat === noteFilter).length === 0 ? (
+              <p className="text-center text-zinc-600 text-sm py-8">还没有笔记</p>
+            ) : notes.filter(n => noteFilter === '全部' || n.cat === noteFilter).map(n => (
+              <div key={n.id} className="flex items-start gap-3 p-3 rounded-xl bg-zinc-800/50 group">
+                <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-400 flex-shrink-0 mt-0.5">{n.cat}</span>
+                <p className="flex-1 text-sm text-zinc-300 whitespace-pre-wrap">{n.text}</p>
+                <span className="text-2xs text-zinc-600 flex-shrink-0 mt-1">{n.created_at?.slice(5, 16) || ''}</span>
+                <button onClick={() => handleDelNote(n.id)} className="text-zinc-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition text-xs flex-shrink-0 mt-1">✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>}
 
       {/* Footer — visible on all screens */}
       <footer className="relative text-center pb-12 px-4" style={{ zIndex: 1 }}>

@@ -69,7 +69,7 @@ export async function fetchRandom(): Promise<Dream[]> {
 export async function publishDream(content: string, nickname: string): Promise<Dream> {
   const res = await fetch(BASE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: headers(),
     body: JSON.stringify({ content, nickname }),
   })
   if (!res.ok) {
@@ -115,9 +115,40 @@ export async function checkFavorite(dreamId: number): Promise<{ favorited: boole
   return res.json()
 }
 
+export async function fetchMyDreams(): Promise<Dream[]> {
+  const res = await fetch(`${BASE}/my`, { headers: headers() })
+  return res.json()
+}
+
 export async function fetchFavorites(): Promise<Dream[]> {
   const res = await fetch(`${BASE}/favorites`, { headers: headers() })
   return res.json()
+}
+
+export interface Note {
+  id: number; text: string; cat: string; created_at: string
+}
+
+export async function fetchNotes(): Promise<Note[]> {
+  const res = await fetch('/api/notes', { headers: headers() })
+  return res.json()
+}
+
+export async function addNote(text: string, cat: string): Promise<Note> {
+  const res = await fetch('/api/notes', {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ text, cat }),
+  })
+  if (!res.ok) throw new Error('保存失败')
+  return res.json()
+}
+
+export async function deleteNote(id: number): Promise<void> {
+  await fetch(`/api/notes/${id}`, {
+    method: 'DELETE',
+    headers: headers(),
+  })
 }
 
 export async function searchDreams(q: string): Promise<Dream[]> {
@@ -126,7 +157,7 @@ export async function searchDreams(q: string): Promise<Dream[]> {
 }
 
 export interface NewsItem {
-  title: string; tag: string; time: string; category: string
+  title: string; titleCn?: string; tag: string; time: string; category: string
 }
 
 export async function fetchNews(): Promise<NewsItem[]> {
