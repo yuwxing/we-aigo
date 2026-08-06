@@ -6,9 +6,6 @@ import Universe from './components/Universe'
 
 type Section = 'hot' | 'latest' | 'random' | 'world' | 'favorites' | 'my'
 
-const moods = ['稳定 🙂', '偏兴奋 🚀', '专注 🧠', '灵感爆发 ⚡']
-const reminders = ['整理想法', '探索未知领域', '关注 AI 前沿', '给梦想加点细节', '看看别人在创造什么']
-
 const newsCats = [
   { key: 'all', label: '全部' },
   { key: 'ai', label: 'AI' },
@@ -48,11 +45,70 @@ const values = [
   { icon: '⚡', title: '即配即用', desc: '无需代码，配置 DeepSeek Key 即可运行；支持个人与企业级部署' },
 ]
 
+type ProductStatus = 'new' | 'online' | 'beta' | 'preview'
+
+interface ProductEntry {
+  key: string
+  href: string
+  title: string
+  desc: string
+  gradient: string
+  status: ProductStatus
+}
+
+const statusStyle: Record<ProductStatus, { label: string; cls: string }> = {
+  new: { label: 'NEW', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+  online: { label: '在线', cls: 'bg-lime-500/10 text-lime-300/80 border-lime-500/20' },
+  beta: { label: '试点', cls: 'bg-amber-500/10 text-amber-300/80 border-amber-500/20' },
+  preview: { label: '内测', cls: 'bg-sky-500/10 text-sky-300/80 border-sky-500/20' },
+}
+
+const productGroups: { title: string; items: ProductEntry[] }[] = [
+  {
+    title: '智能体平台',
+    items: [
+      { key: 'agentos', href: 'https://agent-os.we-aigo.cn', title: 'Agent OS v0.2', desc: '工作台 · Agent Store · 智能体编辑器', gradient: 'from-sky-500 to-blue-600', status: 'online' },
+      { key: 'agenthubos', href: 'https://agenthub.we-aigo.cn', title: 'AgentHub OS', desc: '60 智能体协作平台 · LLM 自动编排', gradient: 'from-violet-500 to-fuchsia-600', status: 'online' },
+      { key: 'hub', href: 'https://agents.we-aigo.cn', title: 'AgentHub MCP', desc: 'AI Agent 发现平台 · 语义检索', gradient: 'from-indigo-500 to-purple-600', status: 'online' },
+      { key: 'console', href: 'https://console.we-aigo.cn', title: '智慧校园 AI 治理平台 v2', desc: '多智能体 · 任务流 · 可视化看板', gradient: 'from-indigo-500 to-violet-600', status: 'online' },
+      { key: 'v3', href: 'https://v3.we-aigo.cn', title: '智慧校园 AI 治理平台 v3', desc: '三栏面板 · Agent 组织树 · 逐步执行', gradient: 'from-purple-500 to-fuchsia-600', status: 'beta' },
+      { key: 'robotteam', href: 'https://agent-os-platform-781.pages.dev', title: '机器人团队', desc: '团队画布 · HITL 人工审批 · MCP 执行', gradient: 'from-cyan-500 to-blue-600', status: 'beta' },
+    ],
+  },
+  {
+    title: '教育',
+    items: [
+      { key: 'school', href: 'https://school.we-aigo.cn', title: 'AI 教务调代课系统 V1', desc: 'AI 匹配最优代课教师 · 确认拒绝流程', gradient: 'from-sky-500 to-cyan-600', status: 'online' },
+      { key: 'team', href: 'https://team.we-aigo.cn', title: '7×24 英语教学 AI 团队', desc: '全天候 AI 学习支持 · 点击进入', gradient: 'from-rose-500 to-red-600', status: 'online' },
+      { key: 'teacher', href: 'https://ai-headteacher-os.pages.dev', title: '班主任 AI 助理', desc: '考勤 · 作业 · 家校沟通 · 成绩分析', gradient: 'from-emerald-500 to-teal-600', status: 'online' },
+      { key: 'gaokao', href: 'https://gaokao.we-aigo.cn', title: 'AI 高考决策中心 v3', desc: '多智能体志愿模拟 · 冲稳保推荐', gradient: 'from-amber-500 to-orange-600', status: 'online' },
+    ],
+  },
+  {
+    title: '生活与城市',
+    items: [
+      { key: 'agenthome', href: 'https://agent-home.we-aigo.cn', title: 'Agent Home OS', desc: '家庭数字孪生 · 多 Agent 实时协作 · Device Mesh', gradient: 'from-cyan-500 to-teal-600', status: 'new' },
+      { key: 'home', href: 'https://live.we-aigo.cn', title: 'Home OS · 智能家居', desc: '虚拟家庭设备控制 · 场景一键执行', gradient: 'from-emerald-500 to-teal-600', status: 'online' },
+      { key: 'city', href: 'https://city.we-aigo.cn', title: '数字孪生政府', desc: '政策 → 部门执行 → 城市反馈 → 再决策', gradient: 'from-emerald-500 to-teal-600', status: 'preview' },
+      { key: 'drama', href: 'https://science.we-aigo.cn/play/', title: '原创科普剧', desc: '分支叙事 · 你的选择改变剧情 · 4 种结局', gradient: 'from-amber-500 to-orange-600', status: 'online' },
+    ],
+  },
+]
+
+
 const steps = [
   { num: '01', title: '注册 / 登录', icon: '👤' },
   { num: '02', title: '配置 DeepSeek Key', icon: '🔑' },
   { num: '03', title: '创建第一个 AI 团队', icon: '🚀' },
   { num: '04', title: '开启未来想象', icon: '✨' },
+]
+
+const navItems = [
+  { label: '首页', id: 'hero' },
+  { label: '产品矩阵', id: 'products' },
+  { label: '快速开始', id: 'start' },
+  { label: '梦想宇宙', id: 'dreams' },
+  { label: '关于', id: 'about' },
 ]
 
 function Toast({ message, visible }: { message: string; visible: boolean }) {
@@ -102,7 +158,6 @@ export default function App() {
   const [noteFilter, setNoteFilter] = useState('全部')
   const [showToast, setShowToast] = useState(false)
   const [toastKey, setToastKey] = useState(0)
-  const [mood, setMood] = useState(moods[0])
   const [news, setNews] = useState<NewsItem[]>([])
   const [newsLoading, setNewsLoading] = useState(false)
   const [newsFilter, setNewsFilter] = useState('all')
@@ -152,11 +207,6 @@ export default function App() {
   }
 
   useEffect(() => { fetchStats().then(setStats).catch(() => {}) }, [])
-
-  useEffect(() => {
-    const t = setInterval(() => setMood(moods[Math.floor(Math.random() * moods.length)]), 8000)
-    return () => clearInterval(t)
-  }, [])
 
   const loadDreams = useCallback(async (s: Section) => {
     setLoading(true); setError('')
@@ -230,15 +280,12 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <a href="#hero" onClick={(e) => { e.preventDefault(); scrollTo('hero') }} className="text-lg font-black glow-text tracking-tight">WE-AIGO</a>
           <div className="hidden md:flex items-center gap-8 text-sm">
-            {['首页', 'AI团队', '梦想宇宙', '关于'].map((label, i) => {
-              const ids = ['hero', 'products', 'dreams', 'about']
-              return (
-                <a key={label} href={`#${ids[i]}`} onClick={(e) => { e.preventDefault(); scrollTo(ids[i]) }}
-                  className="text-gray-400 hover:text-white transition-colors duration-200">
-                  {label}
-                </a>
-              )
-            })}
+            {navItems.map((item) => (
+              <a key={item.label} href={`#${item.id}`} onClick={(e) => { e.preventDefault(); scrollTo(item.id) }}
+                className="text-gray-400 hover:text-white transition-colors duration-200">
+                {item.label}
+              </a>
+            ))}
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => scrollTo('dreams')}
@@ -257,15 +304,12 @@ export default function App() {
         </div>
         {mobileNavOpen && (
           <div className="md:hidden border-t border-white/5" style={{ background: 'rgba(5,5,15,0.95)' }}>
-            {['首页', 'AI团队', '梦想宇宙', '关于'].map((label, i) => {
-              const ids = ['hero', 'products', 'dreams', 'about']
-              return (
-                <a key={label} href={`#${ids[i]}`} onClick={(e) => { e.preventDefault(); scrollTo(ids[i]) }}
-                  className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition">
-                  {label}
-                </a>
-              )
-            })}
+            {navItems.map((item) => (
+              <a key={item.label} href={`#${item.id}`} onClick={(e) => { e.preventDefault(); scrollTo(item.id) }}
+                className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition">
+                {item.label}
+              </a>
+            ))}
           </div>
         )}
       </nav>
@@ -280,11 +324,11 @@ export default function App() {
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tight leading-none">
             <span className="glow-text">WE-AIGO</span>
           </h1>
-          <p className="mt-4 text-lg md:text-xl text-gray-300 font-light">
-            收集人类对未来的想象
+          <p className="mt-5 text-lg md:text-xl text-gray-300 font-light">
+            收集人类对未来的想象，让 AI 为你打工
           </p>
           <p className="mt-3 text-sm md:text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
-            多智能体协同，让 AI 为你打工 —— 配置 DeepSeek Key，5 分钟开启脑力大革命
+            多智能体协同 · 零代码 · 配置 DeepSeek Key，5 分钟开启脑力大革命
           </p>
           <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
             <button onClick={() => scrollTo('dreams')}
@@ -295,9 +339,6 @@ export default function App() {
               className="px-6 py-3 rounded-xl glass text-gray-300 text-sm font-medium hover:bg-white/10 hover:text-white transition-all duration-200">
               探索 AI 团队
             </button>
-          </div>
-          <div className="mt-3 text-xs text-gray-600">
-            DeepSeek · 多智能体 · 零代码
           </div>
         </div>
 
@@ -336,17 +377,17 @@ export default function App() {
 
       {/* ===== AI TEAM PRODUCTS ===== */}
       <section id="products" className="relative px-4 py-16 md:py-24" style={{ zIndex: 1 }}>
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-white">AI 团队 · 多智能体产品矩阵</h2>
             <p className="mt-3 text-sm text-gray-500">一个AI不够用？现在拥有整个AI团队</p>
           </div>
 
           {/* Multi-Agent highlight */}
-          <div className="glass rounded-2xl overflow-hidden mb-6">
+          <div className="glass rounded-2xl overflow-hidden mb-10">
             <div className="h-[3px] bg-gradient-to-r from-violet-500/60 via-fuchsia-500/60 to-indigo-500/60" />
-            <div className="px-5 py-5">
-              <div className="flex items-center gap-3 mb-3">
+            <div className="px-5 md:px-7 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center gap-3 shrink-0">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 </div>
@@ -361,62 +402,46 @@ export default function App() {
             </div>
           </div>
 
-          {/* AI Console bar */}
-          <div className="glass rounded-2xl px-5 py-3 flex items-center justify-between flex-wrap gap-2 mb-6">
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-400">🧠 {mood}</span>
-              <span className="text-gray-600">|</span>
-              <span className="text-gray-400">⏰ {reminders[Math.floor(Math.random() * reminders.length)]}</span>
+          {/* Product groups */}
+          {productGroups.map((group) => (
+            <div key={group.title} className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-sm font-semibold text-white">{group.title}</span>
+                <span className="text-xs text-gray-500">{group.items.length} 个</span>
+                <div className="flex-1 h-px bg-white/5" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {group.items.map((p) => {
+                  const st = statusStyle[p.status]
+                  return (
+                    <a key={p.key} href={p.href} target="_blank" rel="noopener noreferrer"
+                      className="group relative glass rounded-2xl p-4 hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5">
+                      <div className="flex items-start gap-3 pr-4">
+                        <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${p.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {productIcons[p.key].map((d, i) => <path key={i} strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={d} />)}
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-white">{p.title}</p>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shrink-0 ${st.cls}`}>{st.label}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1 leading-relaxed">{p.desc}</p>
+                        </div>
+                      </div>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all text-base">→</span>
+                    </a>
+                  )
+                })}
+              </div>
             </div>
-            <div className="text-xs text-gray-500">
-              📌 WE-AIGO <span className="text-[#6bd6ff]">45%</span>
-            </div>
-          </div>
-
-          {/* Product entries */}
-          <div className="space-y-4">
-            {[
-              { key: 'school', href: 'https://school.we-aigo.cn', title: 'AI教务调代课系统 V1', desc: 'AI自动匹配最优代课教师 · 候选人队列 · 确认拒绝流程', gradient: 'from-sky-500 to-cyan-600' },
-              { key: 'team', href: 'https://team.we-aigo.cn', title: '7×24 英语教学AI团队', desc: '全天候AI学习支持 · 点击进入', gradient: 'from-rose-500 to-red-600' },
-              { key: 'teacher', href: 'https://ai-headteacher-os.pages.dev', title: '班主任AI助理', desc: '考勤 · 作业 · 家校沟通 · 成绩分析 · AI助理', gradient: 'from-emerald-500 to-teal-600' },
-              { key: 'console', href: 'https://console.we-aigo.cn', title: '智慧校园AI治理平台 v2', desc: '多智能体 · 任务流 · 可视化看板 · 实时状态', gradient: 'from-indigo-500 to-violet-600' },
-              { key: 'v3', href: 'https://v3.we-aigo.cn', title: '智慧校园AI治理平台 v3（试点版）', desc: '三栏面板 · Agent组织树 · 逐步执行 · 全新架构', gradient: 'from-purple-500 to-fuchsia-600' },
-              { key: 'gaokao', href: 'https://gaokao.we-aigo.cn', title: 'AI高考决策中心 v3', desc: '多智能体志愿模拟 · 冲稳保推荐 · 风险分析', gradient: 'from-amber-500 to-orange-600' },
-              { key: 'city', href: 'https://city.we-aigo.cn', title: 'AI Government Simulator 数字孪生政府', desc: '深圳政府运行模拟器 · 政策 → 部门执行 → 城市反馈 → 再决策', gradient: 'from-emerald-500 to-teal-600' },
-              { key: 'drama', href: 'https://science.we-aigo.cn/play/', title: '8部原创科普剧 · 互动体验', desc: '分支叙事 · 你的选择改变剧情走向 · 每部4种结局', gradient: 'from-amber-500 to-orange-600' },
-              { key: 'agentos', href: 'https://agent-os.we-aigo.cn', title: 'Agent OS v0.2 · 智能体操作系统', desc: '工作台 · Agent Store · 智能体编辑器 · 创建/改造智能体', gradient: 'from-sky-500 to-blue-600' },
-              { key: 'home', href: 'https://live.we-aigo.cn', title: 'Home OS · 智能家居', desc: '虚拟家庭设备控制 · 空调/灯光/门锁/摄像头 · 场景一键执行', gradient: 'from-emerald-500 to-teal-600' },
-              { key: 'agenthome', href: 'https://agent-home.we-aigo.cn', title: 'Agent Home OS · AI 操作系统', desc: '家庭数字孪生 · 多Agent实时协作 · Skill时间轴 · Device Mesh 控制流', gradient: 'from-cyan-500 to-teal-600' },
-              { key: 'hub', href: 'https://agents.we-aigo.cn', title: 'AgentHub MCP：AI Agent 发现平台', desc: '工具检索、语义搜索、CLI 工具', gradient: 'from-indigo-500 to-purple-600' },
-              { key: 'agenthubos', href: 'https://agenthub.we-aigo.cn', title: 'AgentHub OS · 60智能体协作平台', desc: '30概念+30动作智能体 · LLM自动编排团队 · 多智能体执行管道', gradient: 'from-violet-500 to-fuchsia-600' },
-              { key: 'robotteam', href: 'https://agent-os-platform-781.pages.dev', title: '机器人团队', desc: '多机器人工作平台 · 团队画布 · HITL人工审批 · MCP执行', gradient: 'from-cyan-500 to-blue-600' },
-            ].map(p => (
-              <a key={p.key} href={p.href} target="_blank" rel="noopener noreferrer"
-                className="group block glass rounded-2xl px-5 py-4 hover:bg-white/[0.08] transition-all duration-300 hover:scale-[1.01]">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${p.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {productIcons[p.key].map((d, i) => <path key={i} strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={d} />)}
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white group-hover:text-white transition-colors">{p.title}</p>
-                      <p className="text-xs text-gray-500">{p.desc}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400 group-hover:text-white font-medium flex items-center gap-1">
-                    进入 <span className="text-base">→</span>
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
+          ))}
         </div>
       </section>
 
       {/* ===== HOW TO START ===== */}
-      <section className="relative px-4 py-16 md:py-24" style={{ zIndex: 1 }}>
+      <section id="start" className="relative px-4 py-16 md:py-24" style={{ zIndex: 1 }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-white">快速开始</h2>
