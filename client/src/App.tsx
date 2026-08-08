@@ -37,6 +37,7 @@ const productIcons: Record<string, string[]> = {
   agentos: ['M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z', 'M9 11l2 2 4-4'],
   home: ['M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75'],
   agenthome: ['M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75', 'M12 3l1.5 3.5L17 8l-3.5 1.5L12 13l-1.5-3.5L7 8l3.5-1.5L12 3z'],
+  exchange: ['M3 3v18h18', 'M7 14l3-3 3 3 5-6'],
 }
 
 const values = [
@@ -91,6 +92,12 @@ const productGroups: { title: string; items: ProductEntry[] }[] = [
       { key: 'home', href: 'https://live.we-aigo.cn', title: 'Home OS · 智能家居', desc: '虚拟家庭设备控制 · 场景一键执行', gradient: 'from-emerald-500 to-teal-600', status: 'online' },
       { key: 'city', href: 'https://city.we-aigo.cn', title: '数字孪生政府', desc: '政策 → 部门执行 → 城市反馈 → 再决策', gradient: 'from-emerald-500 to-teal-600', status: 'preview' },
       { key: 'drama', href: 'https://science.we-aigo.cn/play/', title: '原创科普剧', desc: '分支叙事 · 你的选择改变剧情 · 4 种结局', gradient: 'from-amber-500 to-orange-600', status: 'online' },
+    ],
+  },
+  {
+    title: '模拟交易',
+    items: [
+      { key: 'exchange', href: 'https://exchange.we-aigo.cn', title: 'AI Exchange 模拟证券市场', desc: 'AI 生态股模拟交易 · 实时行情 · WEG 生态指数', gradient: 'from-emerald-500 to-teal-600', status: 'new' },
     ],
   },
 ]
