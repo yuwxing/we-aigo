@@ -89,7 +89,7 @@ const productGroups: { title: string; items: ProductEntry[] }[] = [
   {
     title: '研究与知识',
     items: [
-      { key: 'knowledge', href: '/knowledge-entity/index.html', title: '动态知识体实验室', desc: '研究问题 · 文献系统 · 实验复现 · AI 导师', gradient: 'from-blue-600 to-teal-500', status: 'new' },
+      { key: 'knowledge', href: '/knowledge-entity/', title: '动态知识体实验室', desc: '研究问题 · 文献系统 · 实验复现 · AI 导师', gradient: 'from-blue-600 to-teal-500', status: 'new' },
     ],
   },
   {
