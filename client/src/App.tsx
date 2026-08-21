@@ -38,6 +38,7 @@ const productIcons: Record<string, string[]> = {
   home: ['M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75'],
   agenthome: ['M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75', 'M12 3l1.5 3.5L17 8l-3.5 1.5L12 13l-1.5-3.5L7 8l3.5-1.5L12 3z'],
   exchange: ['M3 3v18h18', 'M7 14l3-3 3 3 5-6'],
+  knowledge: ['M4 19.5A2.5 2.5 0 016.5 17H20', 'M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z', 'M8 7h8M8 11h8'],
 }
 
 const values = [
@@ -83,6 +84,12 @@ const productGroups: { title: string; items: ProductEntry[] }[] = [
       { key: 'team', href: 'https://team.we-aigo.cn', title: '7×24 英语教学 AI 团队', desc: '全天候 AI 学习支持 · 点击进入', gradient: 'from-rose-500 to-red-600', status: 'online' },
       { key: 'teacher', href: 'https://ai-headteacher-os.pages.dev', title: '班主任 AI 助理', desc: '考勤 · 作业 · 家校沟通 · 成绩分析', gradient: 'from-emerald-500 to-teal-600', status: 'online' },
       { key: 'gaokao', href: 'https://gaokao.we-aigo.cn', title: 'AI 高考决策中心 v3', desc: '多智能体志愿模拟 · 冲稳保推荐', gradient: 'from-amber-500 to-orange-600', status: 'online' },
+    ],
+  },
+  {
+    title: '研究与知识',
+    items: [
+      { key: 'knowledge', href: '/knowledge-entity/index.html', title: '动态知识体实验室', desc: '研究问题 · 文献系统 · 实验复现 · AI 导师', gradient: 'from-blue-600 to-teal-500', status: 'new' },
     ],
   },
   {
